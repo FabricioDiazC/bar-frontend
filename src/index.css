@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bar-bg: #121212;
+  --color-bar-card: #1E1E1E;
+  --color-bar-text: #EAEAEA;
+  --color-bar-muted: #A0A0A0;
+  --color-bar-accent: #CBA77A;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bar-bg);
+    color: var(--color-bar-text);
+  }
+}
