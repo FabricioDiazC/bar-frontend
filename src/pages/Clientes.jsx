@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaWhatsapp, FaTrash, FaPlus, FaSearch } from 'react-icons/fa';
+import { confirmDelete, toastAlert } from '../utils/alerts'
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -37,9 +38,15 @@ export default function Clientes() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Seguro que deseas eliminar este cliente?')) {
-      await axios.delete(`http://127.0.0.1:8000/api/clientes/${id}/`);
-      fetchClientes();
+    const isConfirmed = await confirmDelete('este cliente');
+    if (isConfirmed) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/clientes/${id}/`);
+        fetchClientes();
+        toastAlert('success', 'Cliente eliminado');
+      } catch (error) {
+        toastAlert('error', 'No se pudo eliminar al cliente');
+      }
     }
   };
 
