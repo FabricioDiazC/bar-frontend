@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import ReservaCard from '../components/ReservCard';
+import ReservaCard from '../components/ReservaCard';
 import ReservaFormModal from '../components/ReservaFormModal';
+import ReservaEditModal from '../components/ReservaEditModal';
 import { FaSearch, FaCalendarAlt } from 'react-icons/fa';
 
 export default function Reservas() {
@@ -9,6 +10,9 @@ export default function Reservas() {
   const [searchTexto, setSearchTexto] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); 
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [reservaToEdit, setReservaToEdit] = useState(null);
 
   const fetchReservas = async () => {
     try {
@@ -34,6 +38,11 @@ export default function Reservas() {
       await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
       fetchReservas();
     }
+  };
+
+  const handleOpenEdit = (reserva) => {
+    setReservaToEdit(reserva);
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -84,7 +93,8 @@ export default function Reservas() {
             <ReservaCard 
               key={reserva.id} 
               reserva={reserva} 
-              onDelete={handleDelete} 
+              onDelete={handleDelete}
+              onEdit={handleOpenEdit}
             />
           ))
         ) : (
@@ -96,6 +106,16 @@ export default function Reservas() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={fetchReservas} 
+      />
+
+      <ReservaEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setReservaToEdit(null); 
+        }}
+        onSuccess={fetchReservas}
+        reserva={reservaToEdit} 
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { FaClock, FaUsers, FaEdit, FaTrash } from 'react-icons/fa';
 
-export default function ReservaCard({ reserva, onDelete }) {
+export default function ReservaCard({ reserva, onDelete, onEdit}) {
   // Función para dar formato a la fecha
   const formatFecha = (fechaStr) => {
     const opciones = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
@@ -31,10 +31,11 @@ export default function ReservaCard({ reserva, onDelete }) {
 
       <div className="mt-6 pt-4 border-t border-zinc-800 flex justify-end gap-3">
         {/* Agregar despues logica para editar loco */}
-        <button className="text-zinc-400 hover:text-white transition">
+        <button onClick={() => onEdit(reserva)}
+        className="text-zinc-400 hover:text-white transition">
           <FaEdit />
         </button>
-        <button onClick={() => onDelete(reserva.id)} className="text-red-500 hover:text-red-400 transition">
+        <button onClick={() => onDelete(reserva.id)} className="text-red-500 hover:text-red-400 transition" title="Eliminar">
           <FaTrash />
         </button>
       </div>
