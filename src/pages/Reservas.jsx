@@ -4,13 +4,13 @@ import ReservaCard from '../components/ReservaCard';
 import ReservaFormModal from '../components/ReservaFormModal';
 import ReservaEditModal from '../components/ReservaEditModal';
 import { FaSearch, FaCalendarAlt } from 'react-icons/fa';
+import { confirmDelete, toastAlert } from '../utils/alerts';
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
   const [searchTexto, setSearchTexto] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); 
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [reservaToEdit, setReservaToEdit] = useState(null);
 
@@ -34,9 +34,17 @@ export default function Reservas() {
   }, [searchTexto, searchFecha]);
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Seguro que deseas cancelar/eliminar esta reserva?')) {
-      await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
-      fetchReservas();
+    const isConfirmed = await confirmDelete('esta reserva');
+    if (isConfirmed) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
+        fetchReservas();
+        toastAlert('success', 'Reserva eliminada');
+        
+      } catch (error) {
+        console.error("Error al eliminar", error);
+        toastAlert('error', 'Error al intentar eliminar');
+      }
     }
   };
 
