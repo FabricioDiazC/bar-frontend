@@ -24,6 +24,12 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   });
 
   // Cargar datos cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      cargarDatos();
+    }
+  }, [isOpen]);
+
   const cargarDatos = async () => {
   try {
     const [resClientes, resRepre, resVouchers] = await Promise.all([
@@ -32,8 +38,8 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
       api.get('vouchers/')
     ]);
 
-    // Seguridad para paginacion:
-    // Se extrae la lista real (results) o la lista directa si no hay paginación
+    //SEGURIDAD PARA PAGINACIÓN:
+    // Extraemos la lista real (results) o la lista directa si no hay paginación
     const listaClientes = resClientes.data.results || (Array.isArray(resClientes.data) ? resClientes.data : []);
     const listaRepre = resRepre.data.results || (Array.isArray(resRepre.data) ? resRepre.data : []);
     const listaVouchers = resVouchers.data.results || (Array.isArray(resVouchers.data) ? resVouchers.data : []);
