@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import ReservaCard from '../components/ReservCard';
+import ReservaCard from '../components/ReservaCard';
+import ReservaFormModal from '../components/ReservaFormModal';
+import ReservaEditModal from '../components/ReservaEditModal';
 import { FaSearch, FaCalendarAlt } from 'react-icons/fa';
+import { confirmDelete, toastAlert } from '../utils/alerts';
+import { toast } from 'react-toastify';
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
   const [searchTexto, setSearchTexto] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [reservaToEdit, setReservaToEdit] = useState(null);
 
   const fetchReservas = async () => {
     try {
@@ -28,18 +35,35 @@ export default function Reservas() {
   }, [searchTexto, searchFecha]);
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Seguro que deseas cancelar/eliminar esta reserva?')) {
-      await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
-      fetchReservas();
+    const isConfirmed = await confirmDelete('esta reserva');
+
+    if (isConfirmed) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
+        fetchReservas();
+        
+        toast.success('Reserva eliminada con éxito');
+        
+      } catch (error) {
+        console.error("Error al eliminar", error);
+        toast.error('Error al intentar eliminar la reserva');
+      }
     }
+  };
+
+  const handleOpenEdit = (reserva) => {
+    setReservaToEdit(reserva);
+    setIsEditModalOpen(true);
   };
 
   return (
     <div>
       <div className="flex justify-between items-end mb-6">
         <h2 className="text-3xl font-light">Reservas</h2>
-        {/* Espacio para que despues poner el boton para abir el modal para CREAR RESERVA, haceme acordar bolo*/}
-        <button className="bg-bar-accent hover:bg-yellow-600 text-black px-5 py-2 rounded font-medium transition">
+        <button 
+          onClick={() => setIsModalOpen(true)} 
+          className="bg-bar-accent hover:bg-yellow-600 text-black px-5 py-2 rounded font-medium transition"
+        >
           + Nueva Reserva
         </button>
       </div>
@@ -80,13 +104,30 @@ export default function Reservas() {
             <ReservaCard 
               key={reserva.id} 
               reserva={reserva} 
-              onDelete={handleDelete} 
+              onDelete={handleDelete}
+              onEdit={handleOpenEdit}
             />
           ))
         ) : (
           <p className="text-bar-muted col-span-full text-center py-10">No se encontraron reservas para estos filtros.</p>
         )}
       </div>
+      {/* Renderizado del Modal*/}
+      <ReservaFormModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchReservas} 
+      />
+
+      <ReservaEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setReservaToEdit(null); 
+        }}
+        onSuccess={fetchReservas}
+        reserva={reservaToEdit} 
+      />
     </div>
   );
 }
