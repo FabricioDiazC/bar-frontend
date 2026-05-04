@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
+import api from '../api/axios';
 import { FaPlus } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -26,7 +27,7 @@ export default function ClienteForm({ onSuccess }) {
     try {
       const telefonoCompleto = `${codigoArea}${numeroLocal}`;
 
-      await axios.post('http://127.0.0.1:8000/api/clientes/', { 
+      await api.post('clientes/', { 
         nombre: nombre, 
         telefono: telefonoCompleto 
       });

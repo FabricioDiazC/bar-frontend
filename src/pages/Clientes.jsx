@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios'; Si no anda, borrar la linea de abajo y sacar las barras a esta
+import api from '../api/axios';
 import { FaWhatsapp, FaTrash, FaPlus, FaSearch, FaEdit } from 'react-icons/fa'; 
 import { toast } from 'react-toastify';
 import { confirmDelete } from '../utils/alerts'; 
@@ -15,7 +16,7 @@ export default function Clientes() {
   // Traer clientes de la API
   const fetchClientes = async () => {
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/api/clientes/?search=${search}`);
+      const res = await api.get(`clientes/?search=${search}`);
       setClientes(res.data);
     } catch (error) {
       console.error("Error al cargar clientes", error);
@@ -31,7 +32,7 @@ export default function Clientes() {
     const isConfirmed = await confirmDelete('este cliente');
     if (isConfirmed) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/clientes/${id}/`);
+        await api.delete(`clientes/${id}/`);
         fetchClientes();
         toast.success('Cliente eliminado');
       } catch (error) {
