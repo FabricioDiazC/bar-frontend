@@ -24,27 +24,33 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   });
 
   // Cargar datos cuando se abre el modal
-  useEffect(() => {
-    if (isOpen) {
-      cargarDatos();
-    }
-  }, [isOpen]);
-
   const cargarDatos = async () => {
-    try {
-      const [resClientes, resRepre, resVouchers] = await Promise.all([
-        api.get('clientes/'),
-        api.get('representantes/'),
-        api.get('vouchers/')
-      ]);
+  try {
+    const [resClientes, resRepre, resVouchers] = await Promise.all([
+      api.get('clientes/'),
+      api.get('representantes/'),
+      api.get('vouchers/')
+    ]);
 
-      setClientes(resClientes.data);
-      setRepresentantes(resRepre.data.filter(r => r.estado === 'activo'));
-      setVouchers(resVouchers.data.filter(v => v.estado === 'activo'));
-    } catch (error) {
-      console.error("Error al cargar los datos para el formulario", error);
-    }
-  };
+    // Seguridad para paginacion:
+    // Se extrae la lista real (results) o la lista directa si no hay paginación
+    const listaClientes = resClientes.data.results || (Array.isArray(resClientes.data) ? resClientes.data : []);
+    const listaRepre = resRepre.data.results || (Array.isArray(resRepre.data) ? resRepre.data : []);
+    const listaVouchers = resVouchers.data.results || (Array.isArray(resVouchers.data) ? resVouchers.data : []);
+
+    setClientes(listaClientes);
+
+    // Ahora sí podemos usar .filter porque estamos seguros de que es un Array
+    setRepresentantes(listaRepre.filter(r => r.estado === 'activo'));
+    setVouchers(listaVouchers.filter(v => v.estado === 'activo'));
+
+  } catch (error) {
+    console.error("Error al cargar los datos para el formulario", error);
+    setClientes([]);
+    setRepresentantes([]);
+    setVouchers([]);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
