@@ -7,6 +7,7 @@ import ReservaEditModal from '../components/ReservaEditModal';
 import { FaSearch, FaCalendarAlt } from 'react-icons/fa';
 import { confirmDelete, toastAlert } from '../utils/alerts';
 import { toast } from 'react-toastify';
+import Paginacion from '../components/Paginacion';
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
@@ -15,25 +16,38 @@ export default function Reservas() {
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [reservaToEdit, setReservaToEdit] = useState(null);
+  //PaGINADO
+  const [pagina, setPagina] = useState(1);
+  const [total, setTotal] = useState(0);
+  
 
   const fetchReservas = async () => {
     try {
-      // Construccion de la URL según los filtros que tengamos
-      let url = `reservas/?search=${searchTexto}`;
-      if (searchFecha) {
-        url += `&fecha=${searchFecha}`;
-      }
+      let url = `reservas/?search=${searchTexto}&page=${pagina}`;
+      if (searchFecha) url += `&fecha=${searchFecha}`;
       
       const res = await api.get(url);
-      setReservas(res.data);
+
+      
+      const datosRecibidos = res.data.results || (Array.isArray(res.data) ? res.data : []);
+      const conteoTotal = res.data.count || datosRecibidos.length;
+
+      setReservas(datosRecibidos);
+      setTotal(conteoTotal);
     } catch (error) {
       console.error("Error al cargar reservas", error);
+      setReservas([]);
     }
   };
 
+  // Resetear página al buscar
+  useEffect(() => {
+    setPagina(1);
+  }, [searchTexto, searchFecha]);
+
   useEffect(() => {
     fetchReservas();
-  }, [searchTexto, searchFecha]);
+  }, [searchTexto, searchFecha, pagina]);
 
   const handleDelete = async (id) => {
     const isConfirmed = await confirmDelete('esta reserva');
@@ -100,7 +114,7 @@ export default function Reservas() {
 
       {/* Grilla de Cards de Reservas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {reservas.length > 0 ? (
+        {reservas?.length > 0 ? (
           reservas.map(reserva => (
             <ReservaCard 
               key={reserva.id} 
@@ -113,6 +127,10 @@ export default function Reservas() {
           <p className="text-bar-muted col-span-full text-center py-10">No se encontraron reservas para estos filtros.</p>
         )}
       </div>
+      <div>
+
+    </div>
+    <Paginacion paginaActual={pagina} total={total} limite={20} onPageChange={setPagina} />
       {/* Renderizado del Modal*/}
       <ReservaFormModal 
         isOpen={isModalOpen} 
