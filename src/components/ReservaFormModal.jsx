@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
+import api from '../api/axios';
 import { FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -32,9 +33,9 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   const cargarDatos = async () => {
     try {
       const [resClientes, resRepre, resVouchers] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/clientes/'),
-        axios.get('http://127.0.0.1:8000/api/representantes/'),
-        axios.get('http://127.0.0.1:8000/api/vouchers/')
+        api.get('clientes/'),
+        api.get('representantes/'),
+        api.get('vouchers/')
       ]);
 
       setClientes(resClientes.data);
@@ -69,13 +70,13 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
       const dataToSend = { ...formData };
       if (!dataToSend.representante) dataToSend.representante = null;
 
-      await axios.post('http://127.0.0.1:8000/api/reservas/', dataToSend);
+      await api.post('reservas/', dataToSend);
       
       setFormData({ /* ... se limpian los datos ... */ });
       onSuccess(); 
       onClose();   
 
-      // DISPARAMOS EL TOAST DE ÉXITO
+      // DISPARAM EL TOAST DE ÉXITO
       toast.success('¡Reserva creada exitosamente!');
 
     } catch (error) {

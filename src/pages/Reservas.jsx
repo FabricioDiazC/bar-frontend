@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
+import api from '../api/axios'; 
 import ReservaCard from '../components/ReservaCard';
 import ReservaFormModal from '../components/ReservaFormModal';
 import ReservaEditModal from '../components/ReservaEditModal';
@@ -18,12 +19,12 @@ export default function Reservas() {
   const fetchReservas = async () => {
     try {
       // Construccion de la URL según los filtros que tengamos
-      let url = `http://127.0.0.1:8000/api/reservas/?search=${searchTexto}`;
+      let url = `reservas/?search=${searchTexto}`;
       if (searchFecha) {
         url += `&fecha=${searchFecha}`;
       }
       
-      const res = await axios.get(url);
+      const res = await api.get(url);
       setReservas(res.data);
     } catch (error) {
       console.error("Error al cargar reservas", error);
@@ -39,7 +40,7 @@ export default function Reservas() {
 
     if (isConfirmed) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
+        await api.delete(`reservas/${id}/`);
         fetchReservas();
         
         toast.success('Reserva eliminada con éxito');
