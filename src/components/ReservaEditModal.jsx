@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
+import api from '../api/axios';
 import { FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -26,13 +27,19 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
       const cargarDatos = async () => {
         try {
           const [resClientes, resRepre, resVouchers] = await Promise.all([
-            axios.get('http://127.0.0.1:8000/api/clientes/'),
-            axios.get('http://127.0.0.1:8000/api/representantes/'),
-            axios.get('http://127.0.0.1:8000/api/vouchers/')
+            api.get('clientes/'),
+            api.get('representantes/'),
+            api.get('vouchers/')
           ]);
-          setClientes(resClientes.data);
-          setRepresentantes(resRepre.data.filter(r => r.estado === 'activo'));
-          setVouchers(resVouchers.data.filter(v => v.estado === 'activo'));
+
+          // Lógica de seguridad para detectar si el backend mandó resultados paginados
+          const listaClientes = resClientes.data.results || (Array.isArray(resClientes.data) ? resClientes.data : []);
+          const listaRepre = resRepre.data.results || (Array.isArray(resRepre.data) ? resRepre.data : []);
+          const listaVouchers = resVouchers.data.results || (Array.isArray(resVouchers.data) ? resVouchers.data : []);
+
+          setClientes(listaClientes);
+          setRepresentantes(listaRepre.filter(r => r.estado === 'activo'));
+          setVouchers(listaVouchers.filter(v => v.estado === 'activo'));
         } catch (error) {
           console.error("Error al cargar los datos", error);
         }
@@ -49,7 +56,7 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
         representante: reserva.representante || '',
         vouchers: reserva.vouchers || [],
         fecha: reserva.fecha || '',
-        // Cortamos los segundos (ej: "21:00:00" -> "21:00") para el input type="time"
+        // Se cortan los segundos (ej: "21:00:00" -> "21:00") para el input type="time"
         hora_inicio: reserva.hora_inicio ? reserva.hora_inicio.slice(0, 5) : '',
         hora_fin: reserva.hora_fin ? reserva.hora_fin.slice(0, 5) : '',
         cantidad_personas: reserva.cantidad_personas || 1,
@@ -78,19 +85,18 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     e.preventDefault();
     try {
       const dataToSend = { ...formData };
+      // Si no hay representante seleccionado se envia null
       if (!dataToSend.representante) dataToSend.representante = null;
 
-      await axios.put(`http://127.0.0.1:8000/api/reservas/${reserva.id}/`, dataToSend);
+      // Se hace PUT a la URL de Render usando el ID de la reserva
+      await api.put(`reservas/${reserva.id}/`, dataToSend);
       
-      onSuccess();
-      onClose();
-
-      // DISPARAMOS EL TOAST DE ÉXITO
-      toast.success('Reserva actualizada correctamente');
-
+      toast.success("Reserva actualizada correctamente");
+      onSuccess(); 
+      onClose();   
     } catch (error) {
       console.error(error);
-      toast.error('Error al actualizar la reserva.');
+      toast.error("Error al actualizar la reserva.");
     }
   };
 
