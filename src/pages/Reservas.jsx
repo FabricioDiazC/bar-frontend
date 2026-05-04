@@ -5,6 +5,7 @@ import ReservaFormModal from '../components/ReservaFormModal';
 import ReservaEditModal from '../components/ReservaEditModal';
 import { FaSearch, FaCalendarAlt } from 'react-icons/fa';
 import { confirmDelete, toastAlert } from '../utils/alerts';
+import { toast } from 'react-toastify';
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
@@ -35,15 +36,17 @@ export default function Reservas() {
 
   const handleDelete = async (id) => {
     const isConfirmed = await confirmDelete('esta reserva');
+
     if (isConfirmed) {
       try {
         await axios.delete(`http://127.0.0.1:8000/api/reservas/${id}/`);
         fetchReservas();
-        toastAlert('success', 'Reserva eliminada');
+        
+        toast.success('Reserva eliminada con éxito');
         
       } catch (error) {
         console.error("Error al eliminar", error);
-        toastAlert('error', 'Error al intentar eliminar');
+        toast.error('Error al intentar eliminar la reserva');
       }
     }
   };

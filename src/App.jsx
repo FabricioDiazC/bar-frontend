@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import Clientes from './pages/Clientes';
 import Reservas from './pages/Reservas';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -15,6 +17,11 @@ function App() {
             <Route path="/reservas" element={<Reservas />} />
           </Routes>
         </main>
+         <ToastContainer 
+          position="bottom-right" 
+          autoClose={3000} 
+          theme="dark" 
+        />
       </div>
     </Router>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   // Estados para las listas desplegables
@@ -70,16 +71,16 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
 
       await axios.post('http://127.0.0.1:8000/api/reservas/', dataToSend);
       
-      // Reiniciar formulario, cerrar modal y actualizar lista
-      setFormData({
-        cliente: '', representante: '', vouchers: [], fecha: '', hora_inicio: '', 
-        hora_fin: '', cantidad_personas: 1, estado: 'reservado', observaciones: ''
-      });
+      setFormData({ /* ... se limpian los datos ... */ });
       onSuccess(); 
       onClose();   
+
+      // DISPARAMOS EL TOAST DE ÉXITO
+      toast.success('¡Reserva creada exitosamente!');
+
     } catch (error) {
       console.error(error.response?.data);
-      alert("Error al crear la reserva. Revisa los datos.");
+      toast.error('Error al crear la reserva. Revisa los datos.');
     }
   };
 

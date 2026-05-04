@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }) {
   const [clientes, setClientes] = useState([]);
@@ -79,14 +80,17 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
       const dataToSend = { ...formData };
       if (!dataToSend.representante) dataToSend.representante = null;
 
-      // Hacemos PUT a la URL específica del ID de esta reserva
       await axios.put(`http://127.0.0.1:8000/api/reservas/${reserva.id}/`, dataToSend);
       
       onSuccess();
       onClose();
+
+      // DISPARAMOS EL TOAST DE ÉXITO
+      toast.success('Reserva actualizada correctamente');
+
     } catch (error) {
       console.error(error);
-      alert("Error al actualizar la reserva.");
+      toast.error('Error al actualizar la reserva.');
     }
   };
 
