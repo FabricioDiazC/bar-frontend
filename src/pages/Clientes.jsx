@@ -1,31 +1,47 @@
 import { useState, useEffect } from 'react';
-//import axios from 'axios'; Si no anda, borrar la linea de abajo y sacar las barras a esta
 import api from '../api/axios';
 import { FaWhatsapp, FaTrash, FaPlus, FaSearch, FaEdit } from 'react-icons/fa'; 
 import { toast } from 'react-toastify';
 import { confirmDelete } from '../utils/alerts'; 
 import ClienteForm from '../components/ClienteForm'; 
 import ClienteEditModal from '../components/ClienteEditModal';
+import Paginacion from '../components/Paginacion';
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [search, setSearch] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [clienteToEdit, setClienteToEdit] = useState(null)
+  //Paginacion
+  const [pagina, setPagina] = useState(1);
+  const [total, setTotal] = useState(0);
+  
 
   // Traer clientes de la API
   const fetchClientes = async () => {
     try {
-      const res = await api.get(`clientes/?search=${search}`);
-      setClientes(res.data);
+      const res = await api.get(`clientes/?search=${search}&page=${pagina}`);
+      
+      // Si el backend ya está paginado, los datos vienen en res.data.results
+      // Si NO está paginado aún, vienen directo en res.data
+      const datosRecibidos = res.data.results || (Array.isArray(res.data) ? res.data : []);
+      const conteoTotal = res.data.count || datosRecibidos.length;
+
+      setClientes(datosRecibidos);
+      setTotal(conteoTotal);
     } catch (error) {
       console.error("Error al cargar clientes", error);
+      setClientes([]); // Evita que sea undefined si falla la red
     }
   };
 
   useEffect(() => {
-    fetchClientes();
+    setPagina(1);
   }, [search]);
+
+  useEffect(() => {
+    fetchClientes();
+  }, [search, pagina]);
 
   // Función para eliminar
   const handleDelete = async (id) => {
@@ -85,7 +101,7 @@ export default function Clientes() {
             </tr>
           </thead>
           <tbody>
-            {clientes.length > 0 ? (
+            {clientes?.length > 0 ? (
               clientes.map(cli => (
                 <tr key={cli.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition">
                   <td className="p-4">{cli.nombre}</td>
@@ -114,6 +130,12 @@ export default function Clientes() {
           </tbody>
         </table>
       </div>
+      <Paginacion 
+        paginaActual={pagina} 
+        total={total}
+        limite={20}
+        onPageChange={(p) => setPagina(p)} 
+      />
       <ClienteEditModal
         isOpen={isEditModalOpen}
         onClose={() => {
