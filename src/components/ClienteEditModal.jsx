@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
+import api from '../api/axios';
 import { FaTimes } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 export default function ClienteEditModal({ isOpen, onClose, onSuccess, cliente }) {
   const [formData, setFormData] = useState({
@@ -39,16 +41,19 @@ export default function ClienteEditModal({ isOpen, onClose, onSuccess, cliente }
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Si cumpleaños está vacío, lo mandamos como null para que Django no de error
       const dataToSend = { ...formData };
+      // Si el cumpleaños está vacío, enviamos null para que Django no de error
       if (!dataToSend.cumpleanios) dataToSend.cumpleanios = null;
 
-      await axios.put(`http://127.0.0.1:8000/api/clientes/${cliente.id}/`, dataToSend);
-      onSuccess(); 
-      onClose();  
+      // Esto ahora usará automáticamente el link de Render en producción
+      await api.put(`clientes/${cliente.id}/`, dataToSend);
+      
+      toast.success("Datos del cliente actualizados");
+      onSuccess();
+      onClose();
     } catch (error) {
       console.error(error);
-      alert("Error al actualizar el cliente. Revisa los datos.");
+      toast.error("Error al actualizar el cliente.");
     }
   };
 
