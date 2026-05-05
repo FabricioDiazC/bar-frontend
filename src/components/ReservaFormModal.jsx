@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 //import axios from 'axios';
 import api from '../api/axios';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSearch  } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
@@ -9,6 +9,12 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   const [clientes, setClientes] = useState([]);
   const [representantes, setRepresentantes] = useState([]);
   const [vouchers, setVouchers] = useState([]);
+
+  // ESTADOS PARA EL BUSCADOR DE CLIENTES
+  const [busqueda, setBusqueda] = useState('');
+  const [resultados, setResultados] = useState([]);
+  const [mostrarResultados, setMostrarResultados] = useState(false);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -26,74 +32,70 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   // Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
-      cargarDatos();
+      cargarDatosIniciales();
     }
   }, [isOpen]);
 
-  const cargarDatos = async () => {
-  try {
-    const [resClientes, resRepre, resVouchers] = await Promise.all([
-      api.get('clientes/'),
-      api.get('representantes/'),
-      api.get('vouchers/')
-    ]);
+  // Buscar clientes cuando el usuario escribe
+  useEffect(() => {
+    const buscarClientes = async () => {
+      if (busqueda.length > 1) { // Empezar a buscar tras 2 letras
+        try {
+          const res = await api.get(`clientes/?search=${busqueda}`);
+          setResultados(res.data.results || res.data);
+          setMostrarResultados(true);
+        } catch (error) {
+          console.error(error);
+        }
+      } else {
+        setResultados([]);
+        setMostrarResultados(false);
+      }
+    };
 
-    //SEGURIDAD PARA PAGINACIÓN:
-    // Extraemos la lista real (results) o la lista directa si no hay paginación
-    const listaClientes = resClientes.data.results || (Array.isArray(resClientes.data) ? resClientes.data : []);
-    const listaRepre = resRepre.data.results || (Array.isArray(resRepre.data) ? resRepre.data : []);
-    const listaVouchers = resVouchers.data.results || (Array.isArray(resVouchers.data) ? resVouchers.data : []);
+    const timeoutId = setTimeout(buscarClientes, 300); // Pequeña espera para no saturar la API
+    return () => clearTimeout(timeoutId);
+  }, [busqueda]);
 
-    setClientes(listaClientes);
+  const cargarDatosIniciales = async () => {
+    try {
+      const [resRepre, resVouchers] = await Promise.all([
+        api.get('representantes/'),
+        api.get('vouchers/')
+      ]);
+      const listaRepre = resRepre.data.results || resRepre.data;
+      const listaVouchers = resVouchers.data.results || resVouchers.data;
+      setRepresentantes(listaRepre.filter(r => r.estado === 'activo'));
+      setVouchers(listaVouchers.filter(v => v.estado === 'activo'));
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    // Ahora sí podemos usar .filter porque estamos seguros de que es un Array
-    setRepresentantes(listaRepre.filter(r => r.estado === 'activo'));
-    setVouchers(listaVouchers.filter(v => v.estado === 'activo'));
-
-  } catch (error) {
-    console.error("Error al cargar los datos para el formulario", error);
-    setClientes([]);
-    setRepresentantes([]);
-    setVouchers([]);
-  }
-};
+  const seleccionarCliente = (c) => {
+    setClienteSeleccionado(c);
+    setFormData({ ...formData, cliente: c.id });
+    setBusqueda(c.nombre); // Ponemos el nombre en el input
+    setMostrarResultados(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Manejar checkboxes de vouchers
-  const handleVoucherChange = (id) => {
-    setFormData((prev) => {
-      const isSelected = prev.vouchers.includes(id);
-      return {
-        ...prev,
-        vouchers: isSelected 
-          ? prev.vouchers.filter(vId => vId !== id) 
-          : [...prev.vouchers, id]
-      };
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.cliente) return alert("Por favor selecciona un cliente de la lista");
     try {
-      const dataToSend = { ...formData };
-      if (!dataToSend.representante) dataToSend.representante = null;
-
-      await api.post('reservas/', dataToSend);
-      
-      setFormData({ /* ... se limpian los datos ... */ });
-      onSuccess(); 
-      onClose();   
-
-      // DISPARAM EL TOAST DE ÉXITO
-      toast.success('¡Reserva creada exitosamente!');
-
+      await api.post('reservas/', formData);
+      setFormData({ cliente: '', representante: '', vouchers: [], fecha: '', hora_inicio: '', hora_fin: '', cantidad_personas: 1, estado: 'reservado', observaciones: '' });
+      setBusqueda('');
+      setClienteSeleccionado(null);
+      onSuccess();
+      onClose();
     } catch (error) {
-      console.error(error.response?.data);
-      toast.error('Error al crear la reserva. Revisa los datos.');
+      alert("Error al crear reserva");
     }
   };
 
@@ -113,18 +115,40 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
           <h2 className="text-2xl font-light text-bar-accent mb-6">Nueva Reserva</h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Cliente y Personas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-bar-muted mb-1">Cliente *</label>
-                <select name="cliente" required value={formData.cliente} onChange={handleChange}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 focus:border-bar-accent focus:outline-none">
-                  <option value="">Selecciona un cliente...</option>
-                  {clientes.map(c => (
-                    <option key={c.id} value={c.id}>{c.nombre} ({c.telefono})</option>
-                  ))}
-                </select>
+             <div className="relative">
+              <label className="block text-sm text-bar-muted mb-1">Buscar Cliente *</label>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-3 text-zinc-500" />
+                <input 
+                  type="text" 
+                  placeholder="Escribe nombre o teléfono..."
+                  value={busqueda}
+                  onChange={(e) => {
+                    setBusqueda(e.target.value);
+                    if (clienteSeleccionado) setFormData({...formData, cliente: ''}); // Si borra se deselecciona
+                  }}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 pl-10 focus:border-bar-accent focus:outline-none"
+                />
               </div>
+
+              {/* Lista de Sugerencias */}
+              {mostrarResultados && resultados.length > 0 && (
+                <ul className="absolute z-10 w-full bg-zinc-900 border border-zinc-700 mt-1 rounded shadow-xl max-h-40 overflow-y-auto">
+                  {resultados.map(c => (
+                    <li 
+                      key={c.id} 
+                      onClick={() => seleccionarCliente(c)}
+                      className="p-3 hover:bg-zinc-800 cursor-pointer border-b border-zinc-800 last:border-0 flex justify-between"
+                    >
+                      <span>{c.nombre}</span>
+                      <span className="text-bar-muted text-xs">{c.telefono}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {/* Cantidad Personas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-bar-muted mb-1">Cant. Personas *</label>
                 <input type="number" name="cantidad_personas" min="1" required value={formData.cantidad_personas} onChange={handleChange}
@@ -198,7 +222,7 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
             <div>
               <label className="block text-sm text-bar-muted mb-1">Observaciones</label>
               <textarea name="observaciones" rows="3" value={formData.observaciones} onChange={handleChange}
-                placeholder="Alergias, vergano"
+                placeholder="Alergias, dieta especial, etc."
                 className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 focus:border-bar-accent focus:outline-none resize-none"
               ></textarea>
             </div>
