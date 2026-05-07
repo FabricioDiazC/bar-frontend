@@ -85,102 +85,132 @@ export default function Clientes() {
   };
 
   return (
-    <div>
-      <h2 className="text-3xl font-light mb-6 text-bar-text">Gestión de Clientes</h2>
+    <div className="pb-10">
+      <h2 className="text-3xl font-light mb-6 text-bar-text px-2 md:px-0">Gestión de Clientes</h2>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <ClienteForm onSuccess={fetchClientes} />
 
-        {/* BUSCADOR Y FILTROS AVANZADOS */}
-        <div className="bg-bar-card p-6 rounded-lg border border-zinc-800 flex flex-col justify-center gap-4">
-          <h3 className="text-xl text-bar-accent flex items-center gap-2">
-            <FaSearch /> Filtros de Búsqueda
-          </h3>
-          
-          <div className="flex flex-col gap-3">
-            {/* Input de texto (Nombre/Tel) */}
-            <input 
-              type="text" placeholder="Nombre o teléfono..." 
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-bar-text focus:outline-none focus:border-bar-accent transition-all" 
-            />
+        <div className="bg-bar-card p-6 rounded-xl border border-zinc-800 flex flex-col justify-between shadow-xl">
+          <div className="space-y-4">
+            <h3 className="text-xl text-bar-accent flex items-center gap-2">
+              <FaSearch /> Filtros de Búsqueda
+            </h3>
+            
+            <div className="flex flex-col gap-3">
+              <input 
+                type="text" placeholder="Nombre o teléfono..." 
+                value={search} onChange={e => setSearch(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-bar-text focus:outline-none focus:border-bar-accent" 
+              />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Selector de Turno */}
-              <div className="relative flex items-center">
-                <FaFilter className="absolute left-3 text-zinc-500 pointer-events-none" size={12}/>
-                <select 
-                  value={turno} 
-                  onChange={e => setTurno(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-3 pl-8 text-bar-text focus:outline-none focus:border-bar-accent appearance-none cursor-pointer"
-                >
-                  <option value="">Todos los turnos</option>
-                  <option value="tarde">Tarde</option>
-                  <option value="noche">Noche</option>
-                  <option value="ambos">Tarde/Noche</option>
-                </select>
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="relative flex items-center">
+                  <FaFilter className="absolute left-3 text-zinc-500 pointer-events-none" size={12}/>
+                  <select 
+                    value={turno} onChange={e => setTurno(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 pl-8 text-bar-text focus:outline-none focus:border-bar-accent appearance-none"
+                  >
+                    <option value="">Todos los turnos</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="noche">Noche</option>
+                  </select>
+                </div>
 
-              {/* Filtro de Cumpleaños */}
-              <div className="relative flex items-center">
-                <FaBirthdayCake className="absolute left-3 text-zinc-500 pointer-events-none" size={14}/>
-                <input 
-                  type="date" 
-                  value={fechaCumple}
-                  onChange={e => setFechaCumple(e.target.value)}
-                  title="Filtrar por cumpleaños"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2.5 pl-9 text-bar-text focus:outline-none focus:border-bar-accent [color-scheme:dark] cursor-pointer"
-                />
+                <div className="relative flex items-center">
+                  <FaBirthdayCake className="absolute left-3 text-zinc-500 pointer-events-none" size={14}/>
+                  <input 
+                    type="date" value={fechaCumple} onChange={e => setFechaCumple(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 pl-9 text-bar-text focus:outline-none focus:border-bar-accent [color-scheme:dark]"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        
+
           <div className="mt-4 flex justify-end">
-                <BotonLimpiarFiltros 
-                  hayFiltros={!!(search || turno || fechaCumple)} 
-                  onLimpiar={limpiarTodo} 
-                />
-                </div>
-              </div>
+            <BotonLimpiarFiltros 
+              hayFiltros={!!(search || turno || fechaCumple)} 
+              onLimpiar={() => {setSearch(''); setTurno(''); setFechaCumple('');}} 
+            />
           </div>
-      {/* Botòn de Borrar Filtros */}
-      <div className="bg-bar-card rounded-lg overflow-hidden border border-zinc-800 shadow-xl">
+        </div>
+      </div>
+
+      {/* --- VISTA PARA TABLETS Y COMPUTADORAS --- */}
+      <div className="hidden md:block bg-bar-card rounded-xl overflow-hidden border border-zinc-800 shadow-2xl">
         <table className="w-full text-left">
-          <thead className="bg-zinc-900 border-b border-zinc-800 text-bar-muted">
+          <thead className="bg-zinc-900 border-b border-zinc-800 text-bar-muted text-xs uppercase tracking-widest">
             <tr>
-              <th className="p-4 font-normal">Nombre</th>
-              <th className="p-4 font-normal">Teléfono</th>
-              <th className="p-4 font-normal text-center">Cumpleaños</th>
-              <th className="p-4 text-right font-normal">Acciones</th>
+              <th className="p-4 font-medium">Nombre</th>
+              <th className="p-4 font-medium">Teléfono</th>
+              <th className="p-4 font-medium text-center">Cumpleaños</th>
+              <th className="p-4 text-right font-medium">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {clientes?.length > 0 ? (
-              clientes.map(cli => (
-                <tr key={cli.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition">
-                  <td className="p-4 font-medium">{cli.nombre}</td>
-                  <td className="p-4 text-bar-muted">{cli.telefono}</td>
-                  <td className="p-4 text-center">
-                    {cli.cumpleanios ? (
-                      <span className="text-sm text-bar-accent flex items-center justify-center gap-2">
-                        <FaBirthdayCake size={12}/> {cli.cumpleanios}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-700 text-xs">-</span>
-                    )}
-                  </td>
-                  <td className="p-4 flex justify-end gap-3">
-                    <button onClick={() => openWhatsApp(cli.telefono)} className="text-green-500 hover:text-green-400 p-2 bg-zinc-900 rounded-full transition" title="WhatsApp"><FaWhatsapp size={18} /></button>
-                    <button onClick={() => { setClienteToEdit(cli); setIsEditModalOpen(true); }} className="text-zinc-400 hover:text-white p-2 bg-zinc-900 rounded-full transition" title="Editar"><FaEdit size={18} /></button>
-                    <button onClick={() => handleDelete(cli.id)} className="text-red-500 hover:text-red-400 p-2 bg-zinc-900 rounded-full transition" title="Eliminar"><FaTrash size={18} /></button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan="4" className="p-10 text-center text-bar-muted italic">No se encontraron clientes para mostrar.</td></tr>
-            )}
+            {clientes?.map(cli => (
+              <tr key={cli.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                <td className="p-4 font-medium text-bar-text">{cli.nombre}</td>
+                <td className="p-4 text-bar-muted">{cli.telefono}</td>
+                <td className="p-4 text-center text-sm">{cli.cumpleanios || '-'}</td>
+                <td className="p-4 flex justify-end gap-3">
+                  <button onClick={() => openWhatsApp(cli.telefono)} className="text-green-500 hover:bg-green-500/10 p-2 rounded-full transition-all"><FaWhatsapp size={18} /></button>
+                  <button onClick={() => { setClienteToEdit(cli); setIsEditModalOpen(true); }} className="text-zinc-400 hover:bg-zinc-100/10 p-2 rounded-full transition-all"><FaEdit size={18} /></button>
+                  <button onClick={() => handleDelete(cli.id)} className="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition-all"><FaTrash size={18} /></button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
+      </div>
+
+      {/* --- VISTA PARA CELULARES (Mobile) --- */}
+      <div className="md:hidden space-y-4 px-2">
+        {clientes?.length > 0 ? (
+          clientes.map(cli => (
+            <div key={cli.id} className="bg-bar-card border border-zinc-800 rounded-2xl p-5 shadow-lg">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-bar-text leading-tight">{cli.nombre}</h4>
+                  <p className="text-bar-muted text-sm mt-1">{cli.telefono}</p>
+                </div>
+                <span className="text-[10px] bg-zinc-900 border border-zinc-800 px-2 py-1 rounded-md uppercase tracking-tighter text-zinc-500">
+                  {cli.turno || 'Sin turno'}
+                </span>
+              </div>
+
+              {/* Botonera Mobile: Botones grandes y fáciles de tocar */}
+              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-zinc-800/50">
+                <button 
+                  onClick={() => openWhatsApp(cli.telefono)}
+                  className="flex flex-col items-center justify-center gap-1 bg-zinc-900 py-3 rounded-xl text-green-500 active:bg-green-500/10 transition-colors"
+                >
+                  <FaWhatsapp size={22} />
+                  <span className="text-[9px] uppercase font-bold text-zinc-500">WhatsApp</span>
+                </button>
+                
+                <button 
+                  onClick={() => { setClienteToEdit(cli); setIsEditModalOpen(true); }}
+                  className="flex flex-col items-center justify-center gap-1 bg-zinc-900 py-3 rounded-xl text-bar-accent active:bg-bar-accent/10 transition-colors"
+                >
+                  <FaEdit size={20} />
+                  <span className="text-[9px] uppercase font-bold text-zinc-500">Editar</span>
+                </button>
+
+                <button 
+                  onClick={() => handleDelete(cli.id)}
+                  className="flex flex-col items-center justify-center gap-1 bg-zinc-900 py-3 rounded-xl text-red-500 active:bg-red-500/10 transition-colors"
+                >
+                  <FaTrash size={18} />
+                  <span className="text-[9px] uppercase font-bold text-zinc-500">Borrar</span>
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-bar-muted py-10 italic">No hay clientes con estos filtros.</p>
+        )}
       </div>
       <Paginacion 
         paginaActual={pagina} 
