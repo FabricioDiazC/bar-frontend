@@ -118,7 +118,7 @@ export default function ClienteEditModal({ isOpen, onClose, onSuccess, cliente }
                 <label className="flex items-center space-x-2 cursor-pointer text-sm">
                   <input type="checkbox" name="aprobado" checked={formData.aprobado} onChange={handleChange}
                     className="accent-bar-accent w-4 h-4" />
-                  <span>Aprobado (Por aspecto)</span>
+                  <span>Aprobado</span>
                 </label>
               </div>
             </div>
