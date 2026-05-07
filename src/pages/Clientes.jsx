@@ -20,24 +20,37 @@ export default function Clientes() {
   //Estado para el filtrado turno
   const [turno, setTurno] = useState('');
   //Estado para el filtro de cumpleaños
-  const [fechaCumple, setFechaCumple] = useState('');
+  const [mesCumple, setMesCumple] = useState('');
+  const [diaCumple, setDiaCumple] = useState('');
+
+  const meses = [
+    { v: "1", n: "Enero" }, { v: "2", n: "Febrero" }, { v: "3", n: "Marzo" },
+    { v: "4", n: "Abril" }, { v: "5", n: "Mayo" }, { v: "6", n: "Junio" },
+    { v: "7", n: "Julio" }, { v: "8", n: "Agosto" }, { v: "9", n: "Septiembre" },
+    { v: "10", n: "Octubre" }, { v: "11", n: "Noviembre" }, { v: "12", n: "Diciembre" }
+  ];
+
   //Funcion para limpiar todos los estados de una vez y por ende los filtros activos
   const limpiarTodo = () => {
-      setSearch('');
-      setTurno('');
-      setFechaCumple('');
-      setPagina(1);
-      toast.info("Filtros restablecidos");
-    };
+    setSearch(''); 
+    setTurno(''); 
+    setMesCumple(''); 
+    setDiaCumple(''); 
+    setPagina(1);
+    toast.info("Filtros restablecidos");
+  };
 
 
   // Traer clientes de la API
   const fetchClientes = async () => {
     try {
-      // Construimos la URL con todos los filtros
+      // URL con todos los filtros
       let url = `clientes/?search=${search}&page=${pagina}`;
-      if (turno) url += `&turno=${turno}`; //Linea para enviar el tuno(dia, noche)
-      if (fechaCumple) url += `&cumpleanios=${fechaCumple}`; // Linea para enviar la fecha del cumple
+      //Filtro para el turno
+      if (turno) url += `&turno=${turno}`;
+      //Filtros para mes y dia
+      if (mesCumple) url += `&mes=${mesCumple}`;
+      if (diaCumple) url += `&dia=${diaCumple}`;
 
       const res = await api.get(url);
       
@@ -54,11 +67,11 @@ export default function Clientes() {
 
   useEffect(() => {
     setPagina(1);
-  }, [search, turno, fechaCumple]);
+  }, [search, turno,  mesCumple, diaCumple]);
 
   useEffect(() => {
     fetchClientes();
-  }, [search, pagina, turno, fechaCumple]);
+  }, [search, pagina, turno, mesCumple, diaCumple]);
 
   // Función para eliminar
   const handleDelete = async (id) => {
@@ -97,32 +110,44 @@ export default function Clientes() {
               <FaSearch /> Filtros de Búsqueda
             </h3>
             
-            <div className="flex flex-col gap-3">
+            <div className="space-y-3">
               <input 
                 type="text" placeholder="Nombre o teléfono..." 
                 value={search} onChange={e => setSearch(e.target.value)}
                 className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-bar-text focus:outline-none focus:border-bar-accent" 
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Filtro Turno */}
                 <div className="relative flex items-center">
-                  <FaFilter className="absolute left-3 text-zinc-500 pointer-events-none" size={12}/>
-                  <select 
-                    value={turno} onChange={e => setTurno(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 pl-8 text-bar-text focus:outline-none focus:border-bar-accent appearance-none"
-                  >
-                    <option value="">Todos los turnos</option>
+                  <FaFilter className="absolute left-3 text-zinc-500 pointer-events-none" size={10}/>
+                  <select value={turno} onChange={e => setTurno(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 pl-8 text-sm text-bar-text focus:outline-none focus:border-bar-accent appearance-none">
+                    <option value="">Turno</option>
                     <option value="tarde">Tarde</option>
                     <option value="noche">Noche</option>
                   </select>
                 </div>
 
+                {/* Filtro Mes */}
                 <div className="relative flex items-center">
-                  <FaBirthdayCake className="absolute left-3 text-zinc-500 pointer-events-none" size={14}/>
-                  <input 
-                    type="date" value={fechaCumple} onChange={e => setFechaCumple(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 pl-9 text-bar-text focus:outline-none focus:border-bar-accent [color-scheme:dark]"
-                  />
+                  <FaBirthdayCake className="absolute left-3 text-zinc-500 pointer-events-none" size={12}/>
+                  <select value={mesCumple} onChange={e => setMesCumple(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 pl-9 text-sm text-bar-text focus:outline-none focus:border-bar-accent appearance-none">
+                    <option value="">Mes</option>
+                    {meses.map(m => <option key={m.v} value={m.v}>{m.n}</option>)}
+                  </select>
+                </div>
+
+                {/* Filtro Día */}
+                <div className="relative flex items-center">
+                  <select value={diaCumple} onChange={e => setDiaCumple(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 px-3 text-sm text-bar-text focus:outline-none focus:border-bar-accent appearance-none">
+                    <option value="">Día</option>
+                    {[...Array(31)].map((_, i) => (
+                      <option key={i+1} value={i+1}>{i+1}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -130,14 +155,14 @@ export default function Clientes() {
 
           <div className="mt-4 flex justify-end">
             <BotonLimpiarFiltros 
-              hayFiltros={!!(search || turno || fechaCumple)} 
-              onLimpiar={() => {setSearch(''); setTurno(''); setFechaCumple('');}} 
+              hayFiltros={!!(search || turno || mesCumple || diaCumple)} 
+              onLimpiar={limpiarTodo} 
             />
           </div>
         </div>
       </div>
 
-      {/* --- VISTA PARA TABLETS Y COMPUTADORAS --- */}
+      {/* --- TABLA DESKTOP --- */}
       <div className="hidden md:block bg-bar-card rounded-xl overflow-hidden border border-zinc-800 shadow-2xl">
         <table className="w-full text-left">
           <thead className="bg-zinc-900 border-b border-zinc-800 text-bar-muted text-xs uppercase tracking-widest">
@@ -153,11 +178,18 @@ export default function Clientes() {
               <tr key={cli.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                 <td className="p-4 font-medium text-bar-text">{cli.nombre}</td>
                 <td className="p-4 text-bar-muted">{cli.telefono}</td>
-                <td className="p-4 text-center text-sm">{cli.cumpleanios || '-'}</td>
+                <td className="p-4 text-center">
+                  {cli.cumpleanios ? (
+                    <span className="text-bar-accent text-sm">
+                      {/* Mostramos solo Día y Mes al usuario */}
+                      {new Date(cli.cumpleanios + 'T00:00:00').toLocaleDateString('es-ES', {day: 'numeric', month: 'long'})}
+                    </span>
+                  ) : '-'}
+                </td>
                 <td className="p-4 flex justify-end gap-3">
                   <button onClick={() => openWhatsApp(cli.telefono)} className="text-green-500 hover:bg-green-500/10 p-2 rounded-full transition-all"><FaWhatsapp size={18} /></button>
                   <button onClick={() => { setClienteToEdit(cli); setIsEditModalOpen(true); }} className="text-zinc-400 hover:bg-zinc-100/10 p-2 rounded-full transition-all"><FaEdit size={18} /></button>
-                  <button onClick={() => handleDelete(cli.id)} className="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition-all"><FaTrash size={18} /></button>
+                  <button onClick={() => {if(window.confirm('¿Borrar?')) api.delete(`clientes/${cli.id}/`).then(()=>fetchClientes())}} className="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition-all"><FaTrash size={18} /></button>
                 </td>
               </tr>
             ))}
@@ -165,52 +197,21 @@ export default function Clientes() {
         </table>
       </div>
 
-      {/* --- VISTA PARA CELULARES (Mobile) --- */}
+      {/* --- CARDS MOBILE --- */}
       <div className="md:hidden space-y-4 px-2">
-        {clientes?.length > 0 ? (
-          clientes.map(cli => (
-            <div key={cli.id} className="bg-bar-card border border-zinc-800 rounded-2xl p-5 shadow-lg">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h4 className="text-lg font-semibold text-bar-text leading-tight">{cli.nombre}</h4>
-                  <p className="text-bar-muted text-sm mt-1">{cli.telefono}</p>
-                </div>
-                <span className="text-[10px] bg-zinc-900 border border-zinc-800 px-2 py-1 rounded-md uppercase tracking-tighter text-zinc-500">
-                  {cli.turno || 'Sin turno'}
-                </span>
-              </div>
-
-              {/* Botonera Mobile: Botones grandes y fáciles de tocar */}
-              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-zinc-800/50">
-                <button 
-                  onClick={() => openWhatsApp(cli.telefono)}
-                  className="flex flex-col items-center justify-center gap-1 bg-zinc-900 py-3 rounded-xl text-green-500 active:bg-green-500/10 transition-colors"
-                >
-                  <FaWhatsapp size={22} />
-                  <span className="text-[9px] uppercase font-bold text-zinc-500">WhatsApp</span>
-                </button>
-                
-                <button 
-                  onClick={() => { setClienteToEdit(cli); setIsEditModalOpen(true); }}
-                  className="flex flex-col items-center justify-center gap-1 bg-zinc-900 py-3 rounded-xl text-bar-accent active:bg-bar-accent/10 transition-colors"
-                >
-                  <FaEdit size={20} />
-                  <span className="text-[9px] uppercase font-bold text-zinc-500">Editar</span>
-                </button>
-
-                <button 
-                  onClick={() => handleDelete(cli.id)}
-                  className="flex flex-col items-center justify-center gap-1 bg-zinc-900 py-3 rounded-xl text-red-500 active:bg-red-500/10 transition-colors"
-                >
-                  <FaTrash size={18} />
-                  <span className="text-[9px] uppercase font-bold text-zinc-500">Borrar</span>
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-bar-muted py-10 italic">No hay clientes con estos filtros.</p>
-        )}
+        {clientes?.map(cli => (
+          <div key={cli.id} className="bg-bar-card border border-zinc-800 rounded-2xl p-5 shadow-lg">
+             <div className="flex justify-between items-start mb-2">
+                <h4 className="text-lg font-semibold text-bar-text">{cli.nombre}</h4>
+             </div>
+             <p className="text-bar-muted text-sm">{cli.telefono}</p>
+             <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-zinc-800/50">
+                <button onClick={() => openWhatsApp(cli.telefono)} className="flex justify-center bg-zinc-900 py-3 rounded-xl text-green-500"><FaWhatsapp size={20} /></button>
+                <button onClick={() => { setClienteToEdit(cli); setIsEditModalOpen(true); }} className="flex justify-center bg-zinc-900 py-3 rounded-xl text-bar-accent"><FaEdit size={20} /></button>
+                <button onClick={() => {if(window.confirm('¿Borrar?')) api.delete(`clientes/${cli.id}/`).then(()=>fetchClientes())}} className="flex justify-center bg-zinc-900 py-3 rounded-xl text-red-500"><FaTrash size={20} /></button>
+             </div>
+          </div>
+        ))}
       </div>
       <Paginacion 
         paginaActual={pagina} 
