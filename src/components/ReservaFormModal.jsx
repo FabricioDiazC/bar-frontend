@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTimes, FaSearch, FaCheckCircle, FaClock  } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaCheckCircle, FaClock, FaTicketAlt   } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
@@ -18,6 +18,14 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
     "21:00", "21:30", "22:00", "22:30", "23:00"
   ];
 
+  // Opciones para el Tipo de Entrada 
+  const opcionesEntrada = [
+    { id: 'free_con_representante', label: 'Free con Representante' },
+    { id: 'free_sin_representante', label: 'Free sin representante' },
+    { id: 'cobrada_con_consumible', label: 'Cobrada con consumible' },
+    { id: 'cobrada_sin_consumible', label: 'Cobrada sin consumible' }
+  ];
+
   const [formData, setFormData] = useState({
     cliente: '',
     representante: '',
@@ -26,7 +34,8 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
     hora_inicio: '',
     cantidad_personas: 1,
     estado: 'reservado',
-    observaciones: ''
+    observaciones: '',
+    tipo_entrada: ''
   });
 
   useEffect(() => {
@@ -86,7 +95,7 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
   };
 
   const resetForm = () => {
-    setFormData({ cliente: '', representante: '', vouchers: [], fecha: '', hora_inicio: '', cantidad_personas: 1, estado: 'reservado', observaciones: '' });
+    setFormData({ cliente: '', representante: '', vouchers: [], fecha: '', hora_inicio: '', cantidad_personas: 1, estado: 'reservado', observaciones: '', tipo_entrada: ''});
     setBusqueda('');
     setClienteConfirmado(false);
   };
@@ -99,6 +108,11 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
     try {
       const dataToSend = { ...formData };
       if (!dataToSend.representante) dataToSend.representante = null;
+      // 3. SOLUCIÓN DEFINITIVA: Si tipo_entrada es una cadena vacía, ELIMINAR el campo del objeto.
+      // De esta forma, el backend no recibe nada y no se queja de la cadena vacía.
+      if (!dataToSend.tipo_entrada) {
+        delete dataToSend.tipo_entrada;
+      }
 
       await api.post('reservas/', dataToSend);
       toast.success("Reserva creada");
@@ -159,23 +173,14 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
                 <input type="date" name="fecha" required value={formData.fecha} onChange={handleChange}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-bar-text focus:outline-none focus:border-bar-accent [color-scheme:dark]" />
               </div>
-              
-              {/* NUEVO SELECTOR DE HORA */}
               <div className="relative">
                 <label className="block text-xs uppercase tracking-widest text-bar-muted mb-1">Hora *</label>
                 <div className="relative flex items-center">
                    <FaClock className="absolute left-3 text-zinc-500 pointer-events-none" size={14} />
-                   <select 
-                    name="hora_inicio" 
-                    required 
-                    value={formData.hora_inicio} 
-                    onChange={handleChange}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 pl-9 text-bar-text focus:outline-none focus:border-bar-accent appearance-none cursor-pointer"
-                   >
+                   <select name="hora_inicio" required value={formData.hora_inicio} onChange={handleChange}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 pl-9 text-bar-text focus:outline-none focus:border-bar-accent appearance-none cursor-pointer">
                      <option value="">Seleccionar...</option>
-                     {horariosPermitidos.map(h => (
-                       <option key={h} value={h}>{h} hs</option>
-                     ))}
+                     {horariosPermitidos.map(h => <option key={h} value={h}>{h} hs</option>)}
                    </select>
                 </div>
               </div>
@@ -213,10 +218,44 @@ export default function ReservaFormModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
 
+            {/* TIPO DE ENTRADA */}
+            <div className="pt-2">
+              <label className="block text-xs uppercase tracking-widest text-bar-muted mb-3 flex items-center gap-2">
+                <FaTicketAlt className="text-bar-accent" /> Tipo de Entrada
+              </label>
+              <div className="flex flex-wrap gap-4 px-2">
+                {opcionesEntrada.map((opcion) => (
+                  <label key={opcion.id} className="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="radio" 
+                      name="tipo_entrada" 
+                      value={opcion.id}
+                      checked={formData.tipo_entrada === opcion.id}
+                      onChange={handleChange}
+                      className="w-4 h-4 accent-bar-accent bg-zinc-900 border-zinc-700" 
+                    />
+                    <span className="text-sm text-bar-text font-light group-hover:text-bar-accent transition-colors">
+                      {opcion.label}
+                    </span>
+                  </label>
+                ))}
+                {/* Botón para desmarcar */}
+                {formData.tipo_entrada && (
+                   <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, tipo_entrada: ''})}
+                    className="text-[12px] text-zinc-600 hover:text-red-500 uppercase tracking-tighter ml-auto"
+                   >
+                     Limpiar Selección
+                   </button>
+                )}
+              </div>
+            </div>
+
             {/* Observaciones */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-bar-muted mb-1">Observaciones</label>
-              <textarea name="observations" rows="2" value={formData.observaciones} onChange={handleChange} placeholder="Detalles de la mesa..." className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-bar-text focus:outline-none focus:border-bar-accent resize-none h-20"></textarea>
+              <textarea name="observaciones" rows="2" value={formData.observaciones} onChange={handleChange} placeholder="Detalles de la mesa..." className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-bar-text focus:outline-none focus:border-bar-accent resize-none h-20"></textarea>
             </div>
 
             <div className="pt-4 border-t border-zinc-800 flex justify-end gap-3">

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTimes, FaSearch, FaCheckCircle, FaClock  } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaCheckCircle, FaClock, FaTicketAlt} from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }) {
   const [representantes, setRepresentantes] = useState([]);
   const [vouchers, setVouchers] = useState([]);
 
+  //Estados para el buscador de clientes
   const [busqueda, setBusqueda] = useState('');
   const [resultados, setResultados] = useState([]);
   const [mostrarResultados, setMostrarResultados] = useState(false);
@@ -18,6 +19,14 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     "21:00", "21:30", "22:00", "22:30", "23:00"
   ];
 
+  // Opciones para el Tipo de Entrada 
+  const opcionesEntrada = [
+    { id: 'free_con_representante', label: 'Free con Representante' },
+    { id: 'free_sin_representante', label: 'Free sin representante' },
+    { id: 'cobrada_con_consumible', label: 'Cobrada con consumible' },
+    { id: 'cobrada_sin_consumible', label: 'Cobrada sin consumible' }
+  ];
+
   const [formData, setFormData] = useState({
     cliente: '',
     representante: '',
@@ -27,7 +36,8 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     cantidad_personas: 1,
     cantidad_personas_reales: 0,
     estado: 'reservado',
-    observaciones: ''
+    observaciones: '',
+    tipo_entrada: ''
   });
 
   useEffect(() => {
@@ -48,7 +58,7 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     }
   }, [isOpen]);
 
-  // CORRECCIÓN 1: Carga de datos más segura
+  // Carga de datos más segura
   useEffect(() => {
     if (isOpen && reserva) {
       setFormData({
@@ -61,7 +71,8 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
         // Usamos el valor que viene del backend, si no existe ponemos 0
         cantidad_personas_reales: reserva.cantidad_personas_reales ?? 0, 
         estado: reserva.estado || 'reservado',
-        observaciones: reserva.observaciones || ''
+        observaciones: reserva.observaciones || '',
+        tipo_entrada: reserva.tipo_entrada || ''
       });
       setBusqueda(reserva.cliente_nombre || '');
       setClienteConfirmado(true);
@@ -118,6 +129,10 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
       };
 
       if (!dataToSend.representante) dataToSend.representante = null;
+      //Si tipo_entrada está vacío, lo eliminamos del objeto
+      if (!dataToSend.tipo_entrada || dataToSend.tipo_entrada === "") {
+        delete dataToSend.tipo_entrada;
+      }
 
       await api.put(`reservas/${reserva.id}/`, dataToSend);
       toast.success("Reserva actualizada correctamente");
@@ -170,7 +185,7 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
               )}
             </div>
 
-            {/* Fila: Personas Planificadas, Reales y Fecha */}
+            {/* Fila: Personas y Fecha */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-widest text-bar-muted mb-1">Personas *</label>
@@ -191,7 +206,6 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
 
             {/* Fila: Horario, Estado y Representante */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               {/* SELECTOR DE HORA (Igual al de Crear) */}
                <div className="relative">
                 <label className="block text-xs uppercase tracking-widest text-bar-muted mb-1">Hora *</label>
                 <div className="relative flex items-center">
@@ -244,10 +258,43 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
               </div>
             </div>
 
+            {/* TIPO DE ENTRADA */}
+            <div className="pt-2">
+              <label className="block text-xs uppercase tracking-widest text-bar-muted mb-3 flex items-center gap-2">
+                <FaTicketAlt className="text-bar-accent" /> Tipo de Entrada
+              </label>
+              <div className="flex flex-wrap gap-x-6 gap-y-3 px-2">
+                {opcionesEntrada.map((opcion) => (
+                  <label key={opcion.id} className="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="radio" 
+                      name="tipo_entrada" 
+                      value={opcion.id}
+                      checked={formData.tipo_entrada === opcion.id}
+                      onChange={handleChange}
+                      className="w-4 h-4 accent-bar-accent bg-zinc-900 border-zinc-700" 
+                    />
+                    <span className="text-sm text-bar-text font-light group-hover:text-bar-accent transition-colors">
+                      {opcion.label}
+                    </span>
+                  </label>
+                ))}
+                {formData.tipo_entrada && (
+                   <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, tipo_entrada: ''})}
+                    className="text-[12px] text-zinc-600 hover:text-red-500 uppercase tracking-tighter ml-auto"
+                   >
+                     Limpiar Selección
+                   </button>
+                )}
+              </div>
+            </div>
+
             {/* Observaciones */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-bar-muted mb-1">Observaciones</label>
-              <textarea name="observations" rows="2" value={formData.observaciones} onChange={handleChange} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-bar-text focus:outline-none focus:border-bar-accent resize-none h-20"></textarea>
+              <textarea name="observaciones" rows="2" value={formData.observaciones} onChange={handleChange} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-bar-text focus:outline-none focus:border-bar-accent resize-none h-20"></textarea>
             </div>
 
             <div className="pt-4 border-t border-zinc-800 flex justify-end gap-3">
