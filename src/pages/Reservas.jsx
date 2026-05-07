@@ -5,7 +5,7 @@ import ReservaCard from '../components/ReservaCard';
 import ReservaFormModal from '../components/ReservaFormModal';
 import ReservaEditModal from '../components/ReservaEditModal';
 import BotonLimpiarFiltros from '../components/BotonLimpiarFiltros';
-import { FaSearch, FaCalendarAlt, FaArrowRight, FaFilter   } from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaArrowRight, FaFilter, FaUserTie} from 'react-icons/fa';
 import { confirmDelete, toastAlert } from '../utils/alerts';
 import { toast } from 'react-toastify';
 import Paginacion from '../components/Paginacion';
@@ -23,6 +23,8 @@ export default function Reservas() {
   //Busqueda por nombre
   const [searchTexto, setSearchTexto] = useState('');
   //const [searchFecha, setSearchFecha] = useState('');
+  //Estado para buscar por representatnte
+  const [searchRepre, setSearchRepre] = useState('');
   //Funciones de modales para abrir nueva reserva y editar reserva
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -35,7 +37,7 @@ export default function Reservas() {
   const fetchReservas = async () => {
     try {
       // Construimos la URL con el rango de fechas
-      let url = `reservas/?search=${searchTexto}&page=${pagina}&fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`;
+      let url = `reservas/?search=${searchTexto}&page=${pagina}&fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}&representante=${searchRepre}`;
       
       if (turno) {
         url += `&turno=${turno}`;
@@ -55,14 +57,15 @@ export default function Reservas() {
   // Este efecto hace que cuando se cambie la fecha o texto se vuelva a la pagina 1
   useEffect(() => {
     setPagina(1);
-  }, [searchTexto, fechaDesde, fechaHasta, turno]);
+  }, [searchTexto, searchRepre, fechaDesde, fechaHasta, turno]);
 
   useEffect(() => {
     fetchReservas();
-  }, [searchTexto, fechaDesde, fechaHasta, pagina, turno]);
+  }, [searchTexto, searchRepre, fechaDesde, fechaHasta, pagina, turno]);
 
   const limpiarFiltros = () => {
     setSearchTexto('');
+    setSearchRepre('');
     setFechaDesde(getToday());
     setFechaHasta(getToday());
     setTurno('');
@@ -97,7 +100,7 @@ export default function Reservas() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4 px-2 md:px-0">
         <div>
           <h2 className="text-3xl font-light text-bar-text">Reservas</h2>
-          <p className="text-bar-muted text-sm mt-1 uppercase tracking-tighter">
+          <p className="text-bar-muted text-sm mt-1 uppercase tracking-widest">
             {fechaDesde === fechaHasta && fechaDesde === getToday() 
               ? "Agenda de hoy" 
               : `Periodo: ${fechaDesde} al ${fechaHasta}`}
@@ -105,33 +108,43 @@ export default function Reservas() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)} 
-          className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full md:w-auto"
+          className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full md:w-auto cursor-pointer"
         >
           + NUEVA RESERVA
         </button>
       </div>
 
-      {/* BARRA DE FILTROS REESTRUCTURADA */}
+      {/* BARRA DE FILTROS  */}
       <div className="bg-bar-card p-5 rounded-2xl border border-zinc-800 shadow-xl mb-8">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
           
-          {/* 1. Buscador */}
-          <div className="relative xl:col-span-1">
-            <FaSearch className="absolute top-3 left-3 text-zinc-500" />
+          {/* 1. Buscador Cliente */}
+          <div className="relative">
+            <FaSearch className="absolute top-3.5 left-3 text-zinc-600" size={12}/>
             <input 
-              type="text" placeholder="Cliente o representante..."
+              type="text" placeholder="Buscar Cliente..."
               value={searchTexto} onChange={e => setSearchTexto(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-bar-text focus:border-bar-accent focus:outline-none" 
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-bar-text focus:border-bar-accent focus:outline-none" 
             />
           </div>
 
-          {/* 2. Selector de Turno (NUEVO) */}
-          <div className="relative xl:col-span-1">
-            <FaFilter className="absolute top-3.5 left-3 text-zinc-500" size={12} />
+          {/* 2. Buscador Representante */}
+          <div className="relative">
+            <FaUserTie className="absolute top-3.5 left-3 text-zinc-600" size={12}/>
+            <input 
+              type="text" placeholder="Buscar Representante..."
+              value={searchRepre} onChange={e => setSearchRepre(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-bar-text focus:border-bar-accent focus:outline-none" 
+            />
+          </div>
+
+          {/* 3. Selector de Turno */}
+          <div className="relative">
+            <FaFilter className="absolute top-3.5 left-3 text-zinc-600" size={10} />
             <select 
               value={turno} 
               onChange={e => setTurno(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2.5 pl-9 pr-4 text-bar-text focus:border-bar-accent focus:outline-none appearance-none cursor-pointer"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2.5 pl-9 pr-4 text-sm text-bar-text focus:border-bar-accent focus:outline-none appearance-none cursor-pointer"
             >
               <option value="">Cualquier Turno</option>
               <option value="tarde">Tarde</option>
@@ -140,30 +153,29 @@ export default function Reservas() {
             </select>
           </div>
 
-          {/* 3. Rango de fechas */}
+          {/* 4. Rango de fechas */}
           <div className="xl:col-span-2 flex flex-col sm:flex-row items-center gap-3">
             <input 
               type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 px-3 text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark]" 
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 px-3 text-sm text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark]" 
             />
             <FaArrowRight className="text-zinc-700 hidden sm:block" />
             <input 
               type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 px-3 text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark]" 
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 px-3 text-sm text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark]" 
             />
           </div>
         </div>
 
-        {/* Botón para limpiar */}
         <div className="mt-4 flex justify-end">
           <BotonLimpiarFiltros 
-            hayFiltros={!!(searchTexto || turno || fechaDesde !== getToday() || fechaHasta !== getToday())} 
+            hayFiltros={!!(searchTexto || searchRepre || turno || fechaDesde !== getToday() || fechaHasta !== getToday())} 
             onLimpiar={limpiarFiltros} 
           />
         </div>
       </div>
 
-      {/* Grilla de Reservas (Cards) */}
+      {/* Grilla de Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-0">
         {reservas?.length > 0 ? (
           reservas.map(reserva => (
