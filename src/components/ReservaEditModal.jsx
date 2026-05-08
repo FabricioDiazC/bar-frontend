@@ -27,6 +27,9 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     { id: 'cobrada_sin_consumible', label: 'Cobrada sin consumible' }
   ];
 
+  // Definimos el valor por defecto del backend como una constante
+  const ENTRADA_POR_DEFECTO = "free_sin_representante";
+
   const [formData, setFormData] = useState({
     cliente: '',
     representante: '',
@@ -37,7 +40,7 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     cantidad_personas_reales: 0,
     estado: 'reservado',
     observaciones: '',
-    tipo_entrada: ''
+    tipo_entrada: ENTRADA_POR_DEFECTO
   });
 
   useEffect(() => {
@@ -72,7 +75,7 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
         cantidad_personas_reales: reserva.cantidad_personas_reales ?? 0, 
         estado: reserva.estado || 'reservado',
         observaciones: reserva.observaciones || '',
-        tipo_entrada: reserva.tipo_entrada || ''
+        tipo_entrada: reserva.tipo_entrada || ENTRADA_POR_DEFECTO 
       });
       setBusqueda(reserva.cliente_nombre || '');
       setClienteConfirmado(true);
@@ -129,9 +132,10 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
       };
 
       if (!dataToSend.representante) dataToSend.representante = null;
-      //Si tipo_entrada está vacío, lo eliminamos del objeto
+      //Si el campo está vacío (por haber hecho click en Limpiar)
+      // se envia el valor por defecto del backend para sobreescribir el valor viejo.
       if (!dataToSend.tipo_entrada || dataToSend.tipo_entrada === "") {
-        delete dataToSend.tipo_entrada;
+        dataToSend.tipo_entrada = ENTRADA_POR_DEFECTO;
       }
 
       await api.put(`reservas/${reserva.id}/`, dataToSend);
@@ -279,12 +283,11 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
                     </span>
                   </label>
                 ))}
-                {formData.tipo_entrada && (
-                   <button 
-                    type="button" 
+                {/* Boton limpiar tipo de entrada */}
+                {formData.tipo_entrada !== ENTRADA_POR_DEFECTO && (
+                   <button type="button" 
                     onClick={() => setFormData({...formData, tipo_entrada: ''})}
-                    className="text-[12px] text-zinc-600 hover:text-red-500 uppercase tracking-tighter ml-auto"
-                   >
+                    className="text-[11px] text-zinc-400 hover:text-red-400 uppercase tracking-widest ml-auto border border-zinc-600 px-3 py-1 rounded-full transition-all hover:border-red-400/30">
                      Limpiar Selección
                    </button>
                 )}
