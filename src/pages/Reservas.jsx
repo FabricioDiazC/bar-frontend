@@ -12,7 +12,19 @@ import Paginacion from '../components/Paginacion';
 
 export default function Reservas() {
   //Funcion para obtener la fecha de hoy en formato AÑO-MES-DIA
-  const getToday = () => new Date().toISOString().split('T')[0];
+  const getToday = () => {
+    const hoy = new Date();
+    const year = hoy.getFullYear();
+    const month = String(hoy.getMonth() + 1).padStart(2, '0');
+    const day = String(hoy.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  //Funcion para formatear la fecha a dia/mes/año
+  const formatearFecha = (fechaISO) => {
+    if (!fechaISO) return '';
+    const [year, month, day] = fechaISO.split('-');
+    return `${day}/${month}/${year}`;
+  };
   //Inicializacion de ambos filtros con la fecha de hoy
   const [fechaDesde, setFechaDesde] = useState(getToday());
   const [fechaHasta, setFechaHasta] = useState(getToday());
@@ -103,7 +115,7 @@ export default function Reservas() {
           <p className="text-bar-muted text-sm mt-1 uppercase tracking-widest">
             {fechaDesde === fechaHasta && fechaDesde === getToday() 
               ? "Agenda de hoy" 
-              : `Periodo: ${fechaDesde} al ${fechaHasta}`}
+              : `Periodo: ${formatearFecha(fechaDesde)} al ${formatearFecha(fechaHasta)}`}
           </p>
         </div>
         <button 
@@ -118,7 +130,7 @@ export default function Reservas() {
       <div className="bg-bar-card p-5 rounded-2xl border border-zinc-800 shadow-xl mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
           
-          {/* 1. Buscador Cliente */}
+          {/* Buscador Cliente */}
           <div className="relative">
             <FaSearch className="absolute top-3.5 left-3 text-zinc-600" size={12}/>
             <input 
@@ -128,7 +140,7 @@ export default function Reservas() {
             />
           </div>
 
-          {/* 2. Buscador Representante */}
+          {/* Buscador Representante */}
           <div className="relative">
             <FaUserTie className="absolute top-3.5 left-3 text-zinc-600" size={12}/>
             <input 
@@ -138,7 +150,7 @@ export default function Reservas() {
             />
           </div>
 
-          {/* 3. Selector de Turno */}
+          {/* Selector de Turno */}
           <div className="relative">
             <FaFilter className="absolute top-3.5 left-3 text-zinc-600" size={10} />
             <select 
@@ -153,7 +165,7 @@ export default function Reservas() {
             </select>
           </div>
 
-          {/* 4. Rango de fechas */}
+          {/* Rango de fechas */}
           <div className="xl:col-span-2 flex flex-col sm:flex-row items-center gap-3">
             <input 
               type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)}
