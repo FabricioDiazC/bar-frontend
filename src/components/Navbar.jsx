@@ -15,6 +15,9 @@ export default function Navbar() {
         <div className="space-x-6">
           <Link to="/clientes" className="hover:text-bar-accent transition">Clientes</Link>
           <Link to="/reservas" className="hover:text-bar-accent transition">Reservas</Link>
+          <Link to="/embajadoras" className="text-bar-text hover:text-bar-accent font-light tracking-wide transition">
+          Embajadoras
+          </Link>
         </div>
       </div>
     </nav>

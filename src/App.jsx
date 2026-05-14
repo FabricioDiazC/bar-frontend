@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import Clientes from './pages/Clientes';
 import Reservas from './pages/Reservas';
+import Embajadoras from './pages/Embajadoras';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Navigate to="/reservas" />} />
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/reservas" element={<Reservas />} />
+            <Route path="/embajadoras" element={<Embajadoras />} />
           </Routes>
         </main>
          <ToastContainer 
