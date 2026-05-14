@@ -60,6 +60,18 @@ export default function Embajadoras() {
   }, [fechaFiltro]);
 
   const handleConfirmar = async (datos) => {
+    //Vlidacion para ver si la embajdora ya esta en la lista
+    const yaExiste = listaAsistencia.some(
+      (asistencia) => asistencia.representante === datos.representante_id
+    );
+
+    if (yaExiste) {
+        //Mensaje para avisar que ya está anotada en la planilla
+      toast.warning("Esta embajadora ya está anotada en la planilla actual.");
+      return; 
+    }
+
+    // Si no se guarda en el bavk end revisar esta parte
     try {
       const payload = {
         representante: datos.representante_id,
@@ -71,7 +83,8 @@ export default function Embajadoras() {
       toast.success(`Embajadora agregada a la lista.`);
       fetchAsistencias(); 
     } catch (error) {
-      toast.error("Posiblemente ya esté cargada en la lista de hoy.");
+      console.error(error);
+      toast.error("Hubo un error al intentar guardar en el servidor.");
     }
   };
 
