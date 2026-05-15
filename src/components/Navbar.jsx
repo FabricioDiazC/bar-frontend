@@ -18,6 +18,9 @@ export default function Navbar() {
           <Link to="/embajadoras" className="text-bar-text hover:text-bar-accent font-light tracking-wide transition">
           Embajadoras
           </Link>
+          <Link to="/entradas" className="text-bar-text hover:text-bar-accent font-light tracking-wide transition">
+  Entradas
+</Link>
         </div>
       </div>
     </nav>
