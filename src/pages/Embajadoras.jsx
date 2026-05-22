@@ -76,7 +76,9 @@ export default function Embajadoras() {
       const payload = {
         representante: datos.representante_id,
         fecha: fechaFiltro,
-        presente: true
+        presente: true,
+        hora_ingreso: datos.hora_ingreso,
+        hora_egreso: datos.hora_egreso
       };
 
       await api.post('asistencias/', payload);
@@ -106,9 +108,9 @@ export default function Embajadoras() {
   };
 
   return (
-    <div className="pb-10 max-w-4xl mx-auto">
+    <div className="pb-10 max-w-5xl mx-auto">
       
-      {/* HEADER */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 px-2 md:px-0">
         <div>
           <h2 className="text-3xl font-light text-bar-text flex items-center gap-3">
@@ -126,7 +128,7 @@ export default function Embajadoras() {
         </button>
       </div>
 
-      {/* FILTRO DE FECHA */}
+      {/* Filtro de Fecha */}
       <div className="bg-bar-card p-4 rounded-xl border border-zinc-800 shadow-xl mb-8 mx-2 md:mx-0 flex items-center gap-4">
         <div className="relative w-full sm:w-64">
           <label className="text-[10px] uppercase text-zinc-500 absolute -top-2 left-2 bg-bar-card px-1">Fecha de Planilla</label>
@@ -151,16 +153,20 @@ export default function Embajadoras() {
         )}
       </div>
 
-      {/* PLANILLA*/}
-      <div className="bg-zinc-100 rounded-xl overflow-hidden shadow-2xl mx-2 md:mx-0">
-        <div className="bg-zinc-800 text-white flex border-b-4 border-zinc-900">
+      {/* Planilla */}
+      <div className="bg-zinc-100 rounded-xl overflow-hidden shadow-2xl mx-2 md:mx-0 overflow-x-auto">
+        <div className="bg-zinc-800 text-white flex border-b-4 border-zinc-900 min-w-[600px]">
           <div className="w-16 py-3 text-center font-bold border-r border-zinc-700">#</div>
-          <div className="flex-1 py-3 px-6 font-bold tracking-widest text-sm">NOMBRE Y APELLIDO</div>
-          <div className="w-24 py-3 text-center font-bold tracking-widest text-sm border-l border-zinc-700">HORA</div>
+          <div className="flex-1 py-3 px-6 font-bold tracking-widest text-sm border-r border-zinc-700">NOMBRE Y APELLIDO</div>
+          
+          {/* Columnas de horario */}
+          <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-r border-zinc-700">INGRESO</div>
+          <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-l border-zinc-700">EGRESO</div>
+          
           <div className="w-16 py-3 border-l border-zinc-700"></div> 
         </div>
 
-        <div className="divide-y border-zinc-300">
+        <div className="divide-y border-zinc-300 min-w-[600px]">
           {listaAsistencia.length > 0 ? (
             listaAsistencia.map((asistencia, index) => {
               const repreData = representantesMap[asistencia.representante] || {};
@@ -172,7 +178,7 @@ export default function Embajadoras() {
                   <div className="w-16 py-4 flex justify-center items-center text-zinc-500 border-r border-zinc-200 font-mono text-sm">
                     {index + 1}
                   </div>
-                  <div className="flex-1 py-4 px-6 flex flex-col justify-center">
+                  <div className="flex-1 py-4 px-6 flex flex-col justify-center border-r border-zinc-200">
                     <span className="font-medium text-zinc-800 text-lg leading-tight">
                       {nombreAMostrar}
                     </span>
@@ -182,11 +188,29 @@ export default function Embajadoras() {
                       </span>
                     )}
                   </div>
-                  <div className="w-24 py-4 flex justify-center items-center border-l border-zinc-200">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-mono font-bold flex items-center gap-1">
-                      <FaRegClock size={10} /> {formatearHora(asistencia.creado_en)}
-                    </span>
+
+                  {/* Columbna Ingreso */}
+                  <div className="w-24 py-4 flex justify-center items-center border-r border-zinc-200">
+                    {asistencia.hora_ingreso ? (
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-mono font-bold flex items-center gap-1">
+                        <FaRegClock size={10} /> {asistencia.hora_ingreso.slice(0,5)}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-300 font-bold">-</span>
+                    )}
                   </div>
+
+                  {/* Columna Egreso */}
+                  <div className="w-24 py-4 flex justify-center items-center border-l border-zinc-200">
+                    {asistencia.hora_egreso ? (
+                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-mono font-bold flex items-center gap-1">
+                        <FaRegClock size={10} /> {asistencia.hora_egreso.slice(0,5)}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-300 font-bold">-</span>
+                    )}
+                  </div>
+
                   <div className="w-16 flex justify-center items-center border-l border-zinc-100">
                     <button 
                       onClick={() => eliminarDeLista(asistencia.id)} 

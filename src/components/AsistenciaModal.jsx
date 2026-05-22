@@ -7,7 +7,10 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
   const [resultados, setResultados] = useState([]);
   const [mostrarResultados, setMostrarResultados] = useState(false);
   const [embajadoraSeleccionada, setEmbajadoraSeleccionada] = useState(null);
+  
+  //Campos para horasde Ingreaso y Egreso
   const [horaIngreso, setHoraIngreso] = useState('');
+  const [horaEgreso, setHoraEgreso] = useState(''); 
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -40,7 +43,8 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
 
     onConfirm({
       representante_id: embajadoraSeleccionada.id,
-      hora_ingreso: horaIngreso || null 
+      hora_ingreso: horaIngreso || null,
+      hora_egreso: horaEgreso || null 
     });
 
     handleClose();
@@ -50,6 +54,7 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
     setBusqueda('');
     setEmbajadoraSeleccionada(null);
     setHoraIngreso('');
+    setHoraEgreso(''); 
     onClose();
   };
 
@@ -65,6 +70,7 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             
+            {/* Buscador de Embajadora */}
             <div className="relative">
               <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
                 <span>Nombre Embajadora *</span>
@@ -92,6 +98,7 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
               )}
             </div>
 
+            {/* Hora de Ingreso */}
             <div className="relative">
               <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
                 <span>Hora de Ingreso</span>
@@ -108,8 +115,25 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
               </div>
             </div>
 
+            {/* Hora de Egreso */}
+            <div className="relative">
+              <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
+                <span>Hora de Egreso</span>
+                <span className="text-zinc-600 italic">Opcional</span>
+              </label>
+              <div className="relative flex items-center">
+                  <FaClock className="absolute left-3 text-zinc-600 pointer-events-none" size={14} />
+                  <input 
+                    type="time" 
+                    value={horaEgreso} 
+                    onChange={e => setHoraEgreso(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-bar-text focus:outline-none focus:border-bar-accent transition-all [color-scheme:dark]"
+                  />
+              </div>
+            </div>
+
             <div className="pt-4 flex justify-between gap-3 border-t border-zinc-800 mt-6 pt-6">
-              <button type="button" onClick={handleClose} className="w-1/3 py-3 text-zinc-500 hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest">Cancelar</button>
+              <button type="button" onClick={handleClose} className="w-1/3 py-3 text-zinc-500 hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest border border-zinc-800 rounded-xl">Cancelar</button>
               <button type="submit" disabled={!embajadoraSeleccionada} className="w-2/3 bg-bar-accent hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition-all cursor-pointer shadow-lg uppercase tracking-widest text-xs">
                 Confirmar
               </button>
