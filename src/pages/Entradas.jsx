@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTicketAlt, FaCalendarAlt } from 'react-icons/fa';
+import { FaTicketAlt, FaCalendarAlt, FaGift } from 'react-icons/fa';
 import EntradaModal from '../components/EntradaModal';
 import { toast } from 'react-toastify';
 
@@ -22,191 +22,170 @@ export default function Entradas() {
   const [fechaFiltro, setFechaFiltro] = useState(getToday());
   const [listaEntradas, setListaEntradas] = useState([]);
   const [representantesMap, setRepresentantesMap] = useState({});
+  const [vouchersMap, setVouchersMap] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 1. Cargar catálogo de representantes (para traducir los IDs a nombres)
-  const fetchRepresentantes = async () => {
-    try {
-      const res = await api.get('representantes/');
-      const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
-      const mapa = {};
-      data.forEach(repre => {
-        mapa[repre.id] = repre;
-      });
-      setRepresentantesMap(mapa);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // Cargar Catálogos (Repres y Vouchers)
+  useEffect(() => {
+    const cargarCatalogos = async () => {
+      try {
+        const [resR, resV] = await Promise.all([api.get('representantes/'), api.get('vouchers/')]);
+        const mapR = {};
+        (resR.data.results || resR.data).forEach(r => mapR[r.id] = r);
+        setRepresentantesMap(mapR);
 
-  // 2. Cargar Entradas desde la base de datos
+        const mapV = {};
+        (resV.data.results || resV.data).forEach(v => mapV[v.id] = v);
+        setVouchersMap(mapV);
+      } catch (e) { console.error(e); }
+    };
+    cargarCatalogos();
+  }, []);
+
   const fetchEntradas = async () => {
     try {
       const res = await api.get(`entradas/?fecha=${fechaFiltro}`);
-      const datosRecibidos = res.data.results || (Array.isArray(res.data) ? res.data : []);
-      setListaEntradas(datosRecibidos);
-    } catch (error) {
-      console.error(error);
-      setListaEntradas([]);
-    }
+      setListaEntradas(res.data.results || res.data || []);
+    } catch (e) { setListaEntradas([]); }
   };
 
-  useEffect(() => { fetchRepresentantes(); }, []);
   useEffect(() => { fetchEntradas(); }, [fechaFiltro]);
 
-  const handleConfirmar = async (nuevaEntrada) => {
+  const handleConfirmar = async (payload) => {
     try {
-      // Le agregamos la fecha actual de la planilla al objeto que enviamos
-      const payload = {
-        ...nuevaEntrada,
-        fecha: fechaFiltro
-      };
-
-      await api.post('entradas/', payload);
-      toast.success('Entradas cargadas en el servidor correctamente.');
-      fetchEntradas(); // Recargamos para que aparezca
-    } catch (error) {
-      console.error(error.response?.data);
-      toast.error('Error al guardar las entradas. Revisa el servidor.');
-    }
+      await api.post('entradas/', { ...payload, fecha: fechaFiltro });
+      toast.success('Carga exitosa');
+      fetchEntradas();
+    } catch (e) { toast.error('Error al guardar'); }
   };
 
-  // --- AGRUPACIÓN INTELIGENTE PARA LA PLANILLA ---
-  const planilla = listaEntradas.reduce((acc, curr) => {
-    const repreId = curr.representante;
-    const repreKey = repreId || 'sin_repre'; 
-    
-    if (!acc[repreKey]) {
-      const repreData = representantesMap[repreId] || {};
-      acc[repreKey] = {
-        nombre: repreId ? (repreData.nombre || 'Cargando...') : 'Sin Representante',
-        free: 0,
-        cobrada_cc: 0,
-        cobrada_sc: 0,
-        total_repre: 0
-      };
+  // --- Agrupacion para tabla 1: Entradas ---
+  const planillaEntradas = listaEntradas.reduce((acc, curr) => {
+    const rId = curr.representante;
+    if (!acc[rId]) {
+      acc[rId] = { nombre: representantesMap[rId]?.nombre || '...', free: 0, cobrada_cc: 0, cobrada_sc: 0, total: 0 };
     }
-    
-    // Sumar según el tipo
     const cant = curr.cantidad_personas || 0;
-    if (curr.tipo === 'free') acc[repreKey].free += cant;
-    if (curr.tipo === 'cobrada_con_consumible') acc[repreKey].cobrada_cc += cant;
-    if (curr.tipo === 'cobrada_sin_consumible') acc[repreKey].cobrada_sc += cant;
-
-    acc[repreKey].total_repre += cant;
+    if (curr.tipo === 'free') acc[rId].free += cant;
+    if (curr.tipo === 'cobrada_con_consumible') acc[rId].cobrada_cc += cant;
+    if (curr.tipo === 'cobrada_sin_consumible') acc[rId].cobrada_sc += cant;
+    acc[rId].total += cant;
     return acc;
   }, {});
 
-  // Convertimos el objeto en una lista ordenada por los que vendieron más
-  const filasPlanilla = Object.values(planilla).sort((a, b) => b.total_repre - a.total_repre);
+  // --- Agrupoacio para tabla 2: Vouchers ---
+  const planillaVouchers = listaEntradas.reduce((acc, curr) => {
+    const rId = curr.representante;
+    if (!curr.vouchers || curr.vouchers.length === 0) return acc;
+    
+    if (!acc[rId]) {
+      acc[rId] = { nombre: representantesMap[rId]?.nombre || '...', vouchersEntregados: {}, totalRepreV: 0 };
+    }
 
-  // Matematicas hijo
-  const totalFree = filasPlanilla.reduce((sum, f) => sum + f.free, 0);
-  const totalCobradaCC = filasPlanilla.reduce((sum, f) => sum + f.cobrada_cc, 0);
-  const totalCobradaSC = filasPlanilla.reduce((sum, f) => sum + f.cobrada_sc, 0);
-  const granTotal = totalFree + totalCobradaCC + totalCobradaSC;
+    curr.vouchers.forEach(vId => {
+      const vNombre = vouchersMap[vId]?.nombre || 'Desconocido';
+      // Cantidad de vouchers = cantidad de personas de esa entrada (CONSULTAR BIEN ESTO PORLAS)
+      const cant = curr.cantidad_personas || 0;
+      acc[rId].vouchersEntregados[vNombre] = (acc[rId].vouchersEntregados[vNombre] || 0) + cant;
+      acc[rId].totalRepreV += cant;
+    });
+    return acc;
+  }, {});
+
+  // Obtener todos los tipos de vouchers que se usaron hoy para las columnas
+  const vouchersEnUso = [...new Set(listaEntradas.flatMap(e => e.vouchers || []).map(id => vouchersMap[id]?.nombre).filter(Boolean))];
 
   return (
-    <div className="pb-10 max-w-6xl mx-auto">
+    <div className="pb-20 max-w-6xl mx-auto space-y-12 px-2 md:px-0 text-bar-text">
       
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 px-2 md:px-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h2 className="text-3xl font-light text-bar-text flex items-center gap-3">
-            <FaTicketAlt className="text-bar-accent" /> Control de Entradas
+          <h2 className="text-3xl font-light flex items-center gap-3 italic text-bar-text">
+            <FaTicketAlt className="text-bar-accent" /> Control de Accesos
           </h2>
-          <p className="text-bar-muted text-sm mt-1 uppercase tracking-widest">
-            {fechaFiltro === getToday() ? "Planilla de Hoy" : `Planilla del ${formatearFecha(fechaFiltro)}`}
-          </p>
+          <p className="text-bar-muted text-xs uppercase tracking-[0.3em] mt-1">{formatearFecha(fechaFiltro)}</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)} 
-          className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs"
-        >
+        <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-8 py-3 rounded-xl font-bold shadow-lg w-full sm:w-auto transition-all cursor-pointer uppercase text-xs">
           + Cargar Entradas
         </button>
       </div>
 
-      {/* FILTRO DE FECHA */}
-      <div className="bg-bar-card p-4 rounded-xl border border-zinc-800 shadow-xl mb-8 mx-2 md:mx-0 flex items-center gap-4">
-        <div className="relative w-full sm:w-64">
-          <label className="text-[10px] uppercase text-zinc-500 absolute -top-2 left-2 bg-bar-card px-1">Fecha de Planilla</label>
-          <div className="flex items-center">
-            <FaCalendarAlt className="absolute left-3 text-zinc-500 pointer-events-none" size={14} />
-            <input type="date" value={fechaFiltro} onChange={e => setFechaFiltro(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 pl-9 pr-3 text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark] cursor-pointer text-sm" 
-            />
-          </div>
-        </div>
-        {fechaFiltro !== getToday() && (
-          <button onClick={() => setFechaFiltro(getToday())} className="text-xs text-bar-muted hover:text-bar-accent transition-colors underline cursor-pointer">
-            Volver a Hoy
-          </button>
-        )}
+      {/* Filtro */}
+      <div className="bg-bar-card p-4 rounded-2xl border border-zinc-800 flex items-center gap-4 shadow-xl">
+        <FaCalendarAlt className="text-zinc-600 ml-2" />
+        <input type="date" value={fechaFiltro} onChange={e => setFechaFiltro(e.target.value)} className="bg-transparent text-bar-text outline-none cursor-pointer [color-scheme:dark] text-sm" />
       </div>
 
-      {/* PLANILLA */}
-      <div className="bg-zinc-100 rounded-xl overflow-hidden shadow-2xl mx-2 md:mx-0">
-        
-        {/* Cabecera */}
-        <div className="bg-zinc-800 text-white flex border-b-4 border-zinc-900 overflow-x-auto">
-          <div className="min-w-[200px] flex-1 py-4 px-6 font-bold tracking-widest text-xs border-r border-zinc-700">REPRESENTANTE</div>
-          <div className="w-32 py-4 text-center font-bold tracking-widest text-[10px] uppercase border-r border-zinc-700">Free</div>
-          <div className="w-32 py-4 text-center font-bold tracking-widest text-[10px] uppercase border-r border-zinc-700 leading-tight">Cobrada<br/>c/ Consum.</div>
-          <div className="w-32 py-4 text-center font-bold tracking-widest text-[10px] uppercase border-r border-zinc-700 leading-tight">Cobrada<br/>s/ Consum.</div>
-          <div className="w-32 py-4 text-center font-bold tracking-widest text-xs text-bar-accent">TOTAL</div>
+      {/* TABLA 1: Entradas */}
+      <div className="bg-zinc-100 rounded-2xl overflow-hidden shadow-2xl border-b-4 border-zinc-300">
+        <div className="bg-zinc-800 text-white flex min-w-[600px] text-[10px] uppercase font-black">
+          <div className="flex-1 py-4 px-6 border-r border-zinc-700 tracking-widest">Representante</div>
+          <div className="w-24 py-4 text-center border-r border-zinc-700">Free</div>
+          <div className="w-24 py-4 text-center border-r border-zinc-700">C/ Cons.</div>
+          <div className="w-24 py-4 text-center border-r border-zinc-700">S/ Cons.</div>
+          <div className="w-24 py-4 text-center text-bar-accent">Total</div>
         </div>
-
-        {/* Filas */}
-        <div className="divide-y border-zinc-300">
-          {filasPlanilla.length > 0 ? (
-            filasPlanilla.map((fila, index) => (
-              <div key={index} className="flex bg-white hover:bg-zinc-50 transition-colors overflow-x-auto">
-                <div className="min-w-[200px] flex-1 py-4 px-6 font-medium text-zinc-800 border-r border-zinc-200">
-                  {fila.nombre}
-                </div>
-                <div className="w-32 py-4 flex justify-center items-center font-mono text-zinc-600 border-r border-zinc-200">
-                  {fila.free > 0 ? fila.free : '-'}
-                </div>
-                <div className="w-32 py-4 flex justify-center items-center font-mono text-zinc-600 border-r border-zinc-200">
-                  {fila.cobrada_cc > 0 ? fila.cobrada_cc : '-'}
-                </div>
-                <div className="w-32 py-4 flex justify-center items-center font-mono text-zinc-600 border-r border-zinc-200">
-                  {fila.cobrada_sc > 0 ? fila.cobrada_sc : '-'}
-                </div>
-                <div className="w-32 py-4 flex justify-center items-center font-mono font-bold text-zinc-900 bg-zinc-100">
-                  {fila.total_repre}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="py-20 text-center text-zinc-400 bg-white">
-              <p className="italic text-lg mb-2">No hay entradas registradas para el {formatearFecha(fechaFiltro)}.</p>
-              <p className="text-sm">Toca el botón "+ CARGAR ENTRADAS" para comenzar.</p>
+        <div className="divide-y divide-zinc-200">
+          {Object.values(planillaEntradas).map((f, i) => (
+            <div key={i} className="flex bg-white text-zinc-800 text-sm font-medium italic min-w-[600px]">
+              <div className="flex-1 py-4 px-6 border-r border-zinc-100">{f.nombre}</div>
+              <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.free || '-'}</div>
+              <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.cobrada_cc || '-'}</div>
+              <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.cobrada_sc || '-'}</div>
+              <div className="w-24 py-4 text-center font-black bg-zinc-50">{f.total}</div>
             </div>
-          )}
+          ))}
         </div>
-
-        {/* FOOTER: TOTALES */}
-        <div className="bg-zinc-800 text-white flex border-t-4 border-zinc-900 overflow-x-auto">
-          <div className="min-w-[200px] flex-1 py-5 px-30 font-bold tracking-widest text-sm text-right text-bar-accent border-r border-zinc-700">
-            TOTALES DEL DÍA
-          </div>
-          <div className="w-32 py-5 text-center font-mono font-bold text-lg border-r border-zinc-700 text-zinc-300">
-            {totalFree}
-          </div>
-          <div className="w-32 py-5 text-center font-mono font-bold text-lg border-r border-zinc-700 text-zinc-300">
-            {totalCobradaCC}
-          </div>
-          <div className="w-32 py-5 text-center font-mono font-bold text-lg border-r border-zinc-700 text-zinc-300">
-            {totalCobradaSC}
-          </div>
-          <div className="w-32 py-5 text-center font-mono font-bold text-2xl text-bar-accent bg-black/30 shadow-inner">
-            {granTotal}
-          </div>
-        </div>
-
       </div>
+
+      {/* TABLA 2: Vouchers */}
+      <section className="space-y-4 pt-4 border-t border-zinc-800">
+        <h3 className="text-sm font-bold text-bar-accent uppercase tracking-widest flex items-center gap-2">
+          <FaGift /> Planilla de Vouchers Entregados
+        </h3>
+        <div className="bg-zinc-100 rounded-2xl overflow-hidden shadow-2xl border-b-4 border-zinc-300 overflow-x-auto">
+          <div className="bg-zinc-800 text-white flex min-w-[600px] text-[10px] uppercase font-black">
+            <div className="flex-1 py-4 px-6 border-r border-zinc-700 tracking-widest">Representante</div>
+            {vouchersEnUso.map(vName => (
+              <div key={vName} className="w-32 py-4 text-center border-r border-zinc-700">{vName}</div>
+            ))}
+            <div className="w-24 py-4 text-center text-bar-accent">Total V.</div>
+          </div>
+          <div className="divide-y divide-zinc-200">
+            {Object.values(planillaVouchers).length > 0 ? (
+              Object.values(planillaVouchers).map((f, i) => (
+                <div key={i} className="flex bg-white text-zinc-800 text-sm font-medium min-w-[600px]">
+                  <div className="flex-1 py-4 px-6 border-r border-zinc-100 italic">{f.nombre}</div>
+                  {vouchersEnUso.map(vName => (
+                    <div key={vName} className="w-32 py-4 text-center border-r border-zinc-100 text-zinc-600 font-mono">
+                      {f.vouchersEntregados[vName] || '-'}
+                    </div>
+                  ))}
+                  <div className="w-24 py-4 text-center font-black bg-yellow-50 text-bar-accent">{f.totalRepreV}</div>
+                </div>
+              ))
+            ) : (
+              <div className="py-10 text-center text-zinc-400 bg-white italic text-xs">No se registraron vouchers para esta fecha.</div>
+            )}
+            
+            {/* Total final vouchers */}
+            {Object.values(planillaVouchers).length > 0 && (
+               <div className="bg-zinc-900 text-bar-accent flex min-w-[600px] font-black uppercase text-[10px]">
+                  <div className="flex-1 py-5 px-6 text-right tracking-[0.2em] border-r border-zinc-800">Total Vouchers del día</div>
+                  {vouchersEnUso.map(vName => (
+                    <div key={vName} className="w-32 py-5 text-center border-r border-zinc-800">
+                      {Object.values(planillaVouchers).reduce((s,f) => s + (f.vouchersEntregados[vName] || 0), 0)}
+                    </div>
+                  ))}
+                  <div className="w-24 py-5 text-center text-xl bg-bar-accent text-black">
+                    {Object.values(planillaVouchers).reduce((s,f) => s + f.totalRepreV, 0)}
+                  </div>
+               </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       <EntradaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmar} />
     </div>
