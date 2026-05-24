@@ -5,6 +5,7 @@ const api = axios.create({
 });
 
 // Para pegar el Token en cada petición
+/*
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -15,6 +16,7 @@ api.interceptors.request.use((config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+*/
 
 // Opcional: Si el servidor responde 401 (Token vencido), desloguear automáticamente
 api.interceptors.response.use(
