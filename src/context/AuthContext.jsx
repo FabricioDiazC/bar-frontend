@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log("Intentando login para:", username);
 
-      const res = await api.post('/token/', { username, password });
+      const res = await api.post('token/', { username, password });
 
       console.log("Respuesta del servidor:", res.data);
 
