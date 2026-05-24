@@ -7,34 +7,42 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
+    // Verificacion de si hay un token
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      setToken(storedToken);
     }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   const login = async (username, password) => {
     try {
-      // Pedir el token al endpoint del agus
       const res = await api.post('token/', { username, password });
-      setToken(res.data.token);
-      return { success: true };
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token); // Se guarda primero en storage
+        setToken(res.data.token); // Luego se actualiza el estado
+        return { success: true };
+      }
     } catch (error) {
-      return { success: false, message: "Credenciales inválidas" };
+      console.error("Error en login:", error.response?.data);
+      return { 
+        success: false, 
+        message: "Usuario o contraseña incorrectos" 
+      };
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setToken(null);
+    // Usamos location.href para limpiar todo el estado de la app al salir
     window.location.href = '/login';
   };
 
   return (
     <AuthContext.Provider value={{ token, login, logout, isAuthenticated: !!token, loading }}>
+      {/* Solo renderizamos la app cuando dejamos de cargar el estado inicial */}
       {!loading && children}
     </AuthContext.Provider>
   );
