@@ -15,8 +15,10 @@ export default function Login() {
     e.preventDefault();
     const result = await login(username, password);
     if (result.success) {
-      toast.success("¡Acceso concedido!");
-      navigate('/reservas');
+      toast.success("Bienvenido");
+      setTimeout(() => {
+      navigate('/reservas', { replace: true });
+    }, 100);
     } else {
       toast.error(result.message);
     }
