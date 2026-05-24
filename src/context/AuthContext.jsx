@@ -18,14 +18,24 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const res = await api.post('token/', { username, password });
+      console.log("Intentando login para:", username);
+
+      const res = await api.post('/token/', { username, password });
+
+      console.log("Respuesta del servidor:", res.data);
+
       if (res.data.token) {
+        const receivedToken = res.data.token;
         localStorage.setItem('token', res.data.token); // Se guarda primero en storage
         setToken(res.data.token); // Luego se actualiza el estado
+        console.log("Token guardado en LocalStorage");
         return { success: true };
+      }else {
+        console.error("El servidor no envio un token en la respuesta");
+        return { success: false, message: "Error en el formato de respuesta" };
       }
     } catch (error) {
-      console.error("Error en login:", error.response?.data);
+      console.error("Error capturado en el login:", error.response?.data || error.message);
       return { 
         success: false, 
         message: "Usuario o contraseña incorrectos" 
