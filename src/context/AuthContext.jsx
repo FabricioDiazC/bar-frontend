@@ -24,10 +24,10 @@ export const AuthProvider = ({ children }) => {
 
       console.log("Respuesta del servidor:", res.data);
 
-      if (res.data.token) {
-        const receivedToken = res.data.token;
-        localStorage.setItem('token', res.data.token); // Se guarda primero en storage
-        setToken(res.data.token); // Luego se actualiza el estado
+      if (res.data.access) {
+        const receivedToken = res.data.access;
+        localStorage.setItem('token', receivedToken); // Se guarda primero en storage
+        setToken(receivedToken); // Luego se actualiza el estado
         console.log("Token guardado en LocalStorage");
         return { success: true };
       }else {
