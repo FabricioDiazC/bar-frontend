@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       // Pedir el token al endpoint del agus
-      const res = await api.post('api-token-auth/', { username, password });
+      const res = await api.post('token/', { username, password });
       setToken(res.data.token);
       return { success: true };
     } catch (error) {
