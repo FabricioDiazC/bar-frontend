@@ -10,7 +10,9 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
   
   //Campos para horasde Ingreaso y Egreso
   const [horaIngreso, setHoraIngreso] = useState('');
-  const [horaEgreso, setHoraEgreso] = useState(''); 
+  const [horaEgreso, setHoraEgreso] = useState('');
+  //Campo para cantidad de acompañantes
+  const [acompanantes, setAcompanantes] = useState('');
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -44,7 +46,8 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
     onConfirm({
       representante_id: embajadoraSeleccionada.id,
       hora_ingreso: horaIngreso || null,
-      hora_egreso: horaEgreso || null 
+      hora_egreso: horaEgreso || null,
+      cantidad_acompanantes: acompanantes !== '' ? parseInt(acompanantes) : null 
     });
 
     handleClose();
@@ -61,33 +64,29 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-4">
-      <div className="bg-bar-card border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl relative text-bar-text">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-bar-text">
+      <div className="bg-bar-card border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl relative">
         <button onClick={handleClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white cursor-pointer transition-colors"><FaTimes size={20} /></button>
 
         <div className="p-8">
           <h2 className="text-xl font-light text-bar-accent mb-6 uppercase tracking-widest text-center border-b border-zinc-800 pb-4">Anotar en Lista</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             
             {/* Buscador de Embajadora */}
             <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
-                <span>Nombre Embajadora *</span>
-                {embajadoraSeleccionada && <span className="text-green-500 flex items-center gap-1"><FaCheckCircle size={10}/> Seleccionada</span>}
-              </label>
+              <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2">Nombre Embajadora *</label>
               <div className="relative group">
                 <FaSearch className="absolute left-3 top-3.5 text-zinc-600" size={12} />
                 <input 
-                  type="text" placeholder="Buscar por nombre o apodo..." 
+                  type="text" placeholder="Buscar por nombre..." 
                   value={busqueda} 
                   onChange={(e) => { setBusqueda(e.target.value); setEmbajadoraSeleccionada(null); }}
-                  className={`w-full bg-zinc-900 border ${embajadoraSeleccionada ? 'border-green-900/40' : 'border-zinc-700'} rounded-xl p-3 pl-9 text-sm focus:border-bar-accent outline-none transition-all`} 
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-sm focus:border-bar-accent outline-none transition-all" 
                 />
               </div>
-              
-              {mostrarResultados && resultados.length > 0 && (
-                <ul className="absolute z-50 w-full bg-zinc-900 border border-zinc-800 mt-2 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+              {mostrarResultados && (
+                <ul className="absolute z-50 w-full bg-zinc-900 border border-zinc-800 mt-2 rounded-xl shadow-2xl max-h-40 overflow-y-auto">
                   {resultados.map(r => (
                     <li key={r.id} onClick={() => seleccionar(r)} className="p-4 hover:bg-zinc-800 cursor-pointer border-b border-zinc-800/50 flex justify-between items-center text-sm font-light">
                       <span>{r.nombre}</span>
@@ -98,44 +97,44 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
               )}
             </div>
 
-            {/* Hora de Ingreso */}
+            {/* Horas ingreso y egreso */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="relative">
+                    <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2">Ingreso</label>
+                    <input type="time" value={horaIngreso} onChange={e => setHoraIngreso(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-sm focus:border-bar-accent outline-none [color-scheme:dark]"/>
+                </div>
+                <div className="relative">
+                    <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2">Egreso</label>
+                    <input type="time" value={horaEgreso} onChange={e => setHoraEgreso(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-sm focus:border-bar-accent outline-none [color-scheme:dark]"/>
+                </div>
+            </div>
+
+            {/* Cantidad Acompañantes*/}
             <div className="relative">
               <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
-                <span>Hora de Ingreso</span>
+                <span>Cantidad Acompañantes</span>
                 <span className="text-zinc-600 italic">Opcional</span>
               </label>
               <div className="relative flex items-center">
-                  <FaClock className="absolute left-3 text-zinc-600 pointer-events-none" size={14} />
+                  <FaUsers className="absolute left-3 text-zinc-600 pointer-events-none" size={14} />
                   <input 
-                    type="time" 
-                    value={horaIngreso} 
-                    onChange={e => setHoraIngreso(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-bar-text focus:outline-none focus:border-bar-accent transition-all [color-scheme:dark]"
+                    type="number" 
+                    min="1" 
+                    placeholder="Mínimo 2..."
+                    value={acompanantes} 
+                    onChange={e => setAcompanantes(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-bar-text focus:border-bar-accent transition-all outline-none text-sm"
                   />
               </div>
+              <p className="text-[9px] text-zinc-500 mt-1 italic">* Si trae acompañantes, el número debe ser superior a 1.</p>
             </div>
 
-            {/* Hora de Egreso */}
-            <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
-                <span>Hora de Egreso</span>
-                <span className="text-zinc-600 italic">Opcional</span>
-              </label>
-              <div className="relative flex items-center">
-                  <FaClock className="absolute left-3 text-zinc-600 pointer-events-none" size={14} />
-                  <input 
-                    type="time" 
-                    value={horaEgreso} 
-                    onChange={e => setHoraEgreso(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-bar-text focus:outline-none focus:border-bar-accent transition-all [color-scheme:dark]"
-                  />
-              </div>
-            </div>
-
-            <div className="pt-4 flex justify-between gap-3 border-t border-zinc-800 mt-6 pt-6">
-              <button type="button" onClick={handleClose} className="w-1/3 py-3 text-zinc-500 hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest border border-zinc-800 rounded-xl">Cancelar</button>
-              <button type="submit" disabled={!embajadoraSeleccionada} className="w-2/3 bg-bar-accent hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition-all cursor-pointer shadow-lg uppercase tracking-widest text-xs">
-                Confirmar
+            <div className="pt-4 flex justify-between gap-3 border-t border-zinc-800 mt-4">
+              <button type="button" onClick={handleClose} className="w-1/3 py-3 text-zinc-500 hover:text-white transition-colors cursor-pointer text-[10px] uppercase tracking-widest">Cancelar</button>
+              <button type="submit" disabled={!embajadoraSeleccionada} className="w-2/3 bg-bar-accent hover:bg-yellow-600 disabled:opacity-50 text-black font-bold py-3 rounded-xl transition-all shadow-lg uppercase tracking-widest text-[10px]">
+                Confirmar Asistencia
               </button>
             </div>
           </form>

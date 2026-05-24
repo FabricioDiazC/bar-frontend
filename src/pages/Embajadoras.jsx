@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTrash, FaClipboardList, FaRegClock, FaCalendarAlt } from 'react-icons/fa';
+import { FaTrash, FaClipboardList, FaRegClock, FaCalendarAlt, FaUsers} from 'react-icons/fa';
 import AsistenciaModal from '../components/AsistenciaModal';
 import { toast } from 'react-toastify';
 
@@ -78,7 +78,8 @@ export default function Embajadoras() {
         fecha: fechaFiltro,
         presente: true,
         hora_ingreso: datos.hora_ingreso,
-        hora_egreso: datos.hora_egreso
+        hora_egreso: datos.hora_egreso,
+        cantidad_acompanantes: datos.cantidad_acompanantes
       };
 
       await api.post('asistencias/', payload);
@@ -109,8 +110,6 @@ export default function Embajadoras() {
 
   return (
     <div className="pb-10 max-w-5xl mx-auto">
-      
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 px-2 md:px-0">
         <div>
           <h2 className="text-3xl font-light text-bar-text flex items-center gap-3">
@@ -120,113 +119,69 @@ export default function Embajadoras() {
             {fechaFiltro === getToday() ? "Planilla de Hoy" : `Planilla del ${formatearFecha(fechaFiltro)}`}
           </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)} 
-          className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs"
-        >
+        <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs">
           + Agregar a la lista
         </button>
       </div>
 
-      {/* Filtro de Fecha */}
+      {/* Filtro de fecha*/}
       <div className="bg-bar-card p-4 rounded-xl border border-zinc-800 shadow-xl mb-8 mx-2 md:mx-0 flex items-center gap-4">
         <div className="relative w-full sm:w-64">
           <label className="text-[10px] uppercase text-zinc-500 absolute -top-2 left-2 bg-bar-card px-1">Fecha de Planilla</label>
-          <div className="flex items-center">
-            <FaCalendarAlt className="absolute left-3 text-zinc-500 pointer-events-none" size={14} />
-            <input 
-              type="date" 
-              value={fechaFiltro} 
-              onChange={e => setFechaFiltro(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 pl-9 pr-3 text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark] cursor-pointer text-sm" 
-            />
-          </div>
+          <input type="date" value={fechaFiltro} onChange={e => setFechaFiltro(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 pl-3 text-bar-text focus:border-bar-accent focus:outline-none [color-scheme:dark] cursor-pointer text-sm" />
         </div>
-        
         {fechaFiltro !== getToday() && (
-          <button 
-            onClick={() => setFechaFiltro(getToday())}
-            className="text-xs text-bar-muted hover:text-bar-accent transition-colors underline cursor-pointer"
-          >
-            Volver a Hoy
-          </button>
+          <button onClick={() => setFechaFiltro(getToday())} className="text-xs text-bar-muted hover:text-bar-accent transition-colors underline cursor-pointer">Volver a Hoy</button>
         )}
       </div>
 
-      {/* Planilla */}
+      {/* PLANILLA */}
       <div className="bg-zinc-100 rounded-xl overflow-hidden shadow-2xl mx-2 md:mx-0 overflow-x-auto">
-        <div className="bg-zinc-800 text-white flex border-b-4 border-zinc-900 min-w-[600px]">
-          <div className="w-16 py-3 text-center font-bold border-r border-zinc-700">#</div>
-          <div className="flex-1 py-3 px-6 font-bold tracking-widest text-sm border-r border-zinc-700">NOMBRE Y APELLIDO</div>
+        <div className="bg-zinc-800 text-white flex border-b-4 border-zinc-900 min-w-[700px]">
+          <div className="w-12 py-3 text-center font-bold border-r border-zinc-700">#</div>
+          <div className="flex-1 py-3 px-6 font-bold tracking-widest text-xs border-r border-zinc-700 uppercase">Nombre y Apellido</div>
           
-          {/* Columnas de horario */}
-          <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-r border-zinc-700">INGRESO</div>
-          <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-l border-zinc-700">EGRESO</div>
+          {/* columna acompañantes */}
+          <div className="w-16 py-3 text-center font-bold tracking-widest text-[10px] border-r border-zinc-700">ACOMP.</div>
           
-          <div className="w-16 py-3 border-l border-zinc-700"></div> 
+          <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-r border-zinc-700 uppercase">Ingreso</div>
+          <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-l border-zinc-700 uppercase">Egreso</div>
+          <div className="w-12 py-3 border-l border-zinc-700"></div> 
         </div>
 
-        <div className="divide-y border-zinc-300 min-w-[600px]">
+        <div className="divide-y border-zinc-300 min-w-[700px]">
           {listaAsistencia.length > 0 ? (
             listaAsistencia.map((asistencia, index) => {
               const repreData = representantesMap[asistencia.representante] || {};
-              const nombreAMostrar = repreData.nombre || 'Cargando...';
-              const apodoAMostrar = repreData.apodo || '';
-
               return (
                 <div key={asistencia.id} className="flex bg-white hover:bg-zinc-50 transition-colors">
-                  <div className="w-16 py-4 flex justify-center items-center text-zinc-500 border-r border-zinc-200 font-mono text-sm">
-                    {index + 1}
-                  </div>
+                  <div className="w-12 py-4 flex justify-center items-center text-zinc-500 border-r border-zinc-200 font-mono text-sm">{index + 1}</div>
                   <div className="flex-1 py-4 px-6 flex flex-col justify-center border-r border-zinc-200">
-                    <span className="font-medium text-zinc-800 text-lg leading-tight">
-                      {nombreAMostrar}
-                    </span>
-                    {apodoAMostrar && (
-                      <span className="text-xs font-light text-zinc-500 mt-1 uppercase tracking-widest">
-                        Alias: {apodoAMostrar}
-                      </span>
-                    )}
+                    <span className="font-medium text-zinc-800 text-lg leading-tight">{repreData.nombre || '...'}</span>
+                    {repreData.apodo && <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">Alias: {repreData.apodo}</span>}
                   </div>
 
-                  {/* Columbna Ingreso */}
+                  {/* Celda acompañantes */}
+                  <div className="w-16 py-4 flex justify-center items-center border-r border-zinc-200 font-bold text-zinc-700">
+                    {asistencia.cantidad_acompanantes ? `+${asistencia.cantidad_acompanantes}` : '-'}
+                  </div>
+
                   <div className="w-24 py-4 flex justify-center items-center border-r border-zinc-200">
-                    {asistencia.hora_ingreso ? (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-mono font-bold flex items-center gap-1">
-                        <FaRegClock size={10} /> {asistencia.hora_ingreso.slice(0,5)}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-300 font-bold">-</span>
-                    )}
+                    {asistencia.hora_ingreso ? <span className="text-sm font-mono font-bold text-green-700">{asistencia.hora_ingreso.slice(0,5)}</span> : '-'}
                   </div>
-
-                  {/* Columna Egreso */}
                   <div className="w-24 py-4 flex justify-center items-center border-l border-zinc-200">
-                    {asistencia.hora_egreso ? (
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-mono font-bold flex items-center gap-1">
-                        <FaRegClock size={10} /> {asistencia.hora_egreso.slice(0,5)}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-300 font-bold">-</span>
-                    )}
+                    {asistencia.hora_egreso ? <span className="text-sm font-mono font-bold text-red-700">{asistencia.hora_egreso.slice(0,5)}</span> : '-'}
                   </div>
-
-                  <div className="w-16 flex justify-center items-center border-l border-zinc-100">
-                    <button 
-                      onClick={() => eliminarDeLista(asistencia.id)} 
-                      className="text-zinc-300 hover:text-red-500 hover:bg-red-50 p-3 rounded-full transition-colors cursor-pointer"
-                      title="Quitar de la lista"
-                    >
-                      <FaTrash size={14} />
-                    </button>
+                  <div className="w-12 flex justify-center items-center border-l border-zinc-100">
+                    <button onClick={() => eliminarDeLista(asistencia.id)} className="text-zinc-300 hover:text-red-500 p-2 cursor-pointer transition-colors"><FaTrash size={14} /></button>
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="py-20 text-center text-zinc-400 bg-white">
-              <p className="italic text-lg mb-2">La planilla del {formatearFecha(fechaFiltro)} está en blanco.</p>
-              <p className="text-sm">Toca el botón "+ AGREGAR A LA LISTA" para comenzar.</p>
+              <p className="italic text-lg mb-2">La planilla del {formatearFecha(fechaFiltro)} está vacía.</p>
             </div>
           )}
         </div>
