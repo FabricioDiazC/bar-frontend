@@ -23,7 +23,7 @@ function App() {
 
                 {/* Rutas Protegidas */}
                 <Route element={<PrivateRoute />}>
-                  <Route path="/" element={<Navigate to="/reservas" />} />
+                  {/* <Route path="/" element={<Navigate to="/reservas" />} />*/}
                   <Route path="/clientes" element={<Clientes />} />
                   <Route path="/reservas" element={<Reservas />} />
                   <Route path="/entradas" element={<Entradas />} />
