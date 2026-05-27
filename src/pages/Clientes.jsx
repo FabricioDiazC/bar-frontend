@@ -97,12 +97,24 @@ export default function Clientes() {
     setIsEditModalOpen(true);
   };
 
+  // Función que se ejecuta cuando el ClienteForm termina de crear al cliente
+  const handleClienteCreado = (nuevoCliente) => {
+    // Para agregara el cliente al inicio de la listaa
+    setClientes(prevClientes => [nuevoCliente, ...prevClientes].slice(0, 20));
+    
+    // Se suma 1 al total general para que los numeros de la paginación se actualicen
+    setTotal(prevTotal => prevTotal + 1);
+    
+    // Forzamos a la vista a volver a la página 1 para que el usuario vea a su cliente
+    if (pagina !== 1) setPagina(1);
+  };
+
   return (
     <div className="pb-10">
       <h2 className="text-3xl font-light mb-6 text-bar-text px-2 md:px-0">Gestión de Clientes</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <ClienteForm onSuccess={fetchClientes} />
+        <ClienteForm onSuccess={handleClienteCreado} />
 
         <div className="bg-bar-card p-6 rounded-xl border border-zinc-800 flex flex-col justify-between shadow-xl">
           <div className="space-y-4">
