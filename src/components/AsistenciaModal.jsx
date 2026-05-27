@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTimes, FaSearch, FaCheckCircle, FaClock } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaCheckCircle, FaClock,FaUsers } from 'react-icons/fa';
 
 export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
   const [busqueda, setBusqueda] = useState('');
