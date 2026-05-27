@@ -122,13 +122,11 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
                   <input 
                     type="number" 
                     min="1" 
-                    placeholder="Mínimo 2..."
                     value={acompanantes} 
                     onChange={e => setAcompanantes(e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-bar-text focus:border-bar-accent transition-all outline-none text-sm"
                   />
               </div>
-              <p className="text-[9px] text-zinc-500 mt-1 italic">* Si trae acompañantes, el número debe ser superior a 1.</p>
             </div>
 
             <div className="pt-4 flex justify-between gap-3 border-t border-zinc-800 mt-4">
