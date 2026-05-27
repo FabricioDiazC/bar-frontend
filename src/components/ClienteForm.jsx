@@ -10,8 +10,8 @@ export default function ClienteForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Ahora enviamos el teléfono tal cual se escribió en el input
-      await api.post('clientes/', { 
+      // Se envia el teléfono tal cual se escribió en el input
+      const res = await api.post('clientes/', { 
         nombre: nombre, 
         telefono: telefono 
       });
@@ -20,10 +20,10 @@ export default function ClienteForm({ onSuccess }) {
       setNombre('');
       setTelefono('');
       
-      toast.success('¡Cliente agregado exitosamente!');
+      toast.success('Cliente agregado exitosamente');
       
       // Refrescar la lista de clientes en la página principal
-      onSuccess(); 
+      onSuccess(res.data); 
     } catch (error) {
       console.error(error.response?.data);
       // Django dará error si el teléfono ya existe (unique=True)
