@@ -121,7 +121,7 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
                   <FaUsers className="absolute left-3 text-zinc-600 pointer-events-none" size={14} />
                   <input 
                     type="number" 
-                    min="1" 
+                    min="0" 
                     value={acompanantes} 
                     onChange={e => setAcompanantes(e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-bar-text focus:border-bar-accent transition-all outline-none text-sm"
