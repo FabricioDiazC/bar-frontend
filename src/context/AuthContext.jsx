@@ -25,9 +25,10 @@ export const AuthProvider = ({ children }) => {
       console.log("Respuesta del servidor:", res.data);
 
       if (res.data.access) {
-        const receivedToken = res.data.access;
-        localStorage.setItem('token', receivedToken); // Se guarda primero en storage
-        setToken(receivedToken); // Luego se actualiza el estado
+        //const receivedToken = res.data.access;
+        localStorage.setItem('token', res.data.access); // Se guarda en storage el token
+        localStorage.setItem('refresh_token', res.data.refresh); //Se guarda un token de repuesto
+        setToken(res.data.access); // Luego se actualiza el estado
         console.log("Token guardado en LocalStorage");
         return { success: true };
       }else {
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: "Error en el formato de respuesta" };
       }
     } catch (error) {
-      console.error("Error capturado en el login:", error.response?.data || error.message);
+      console.error("Error en el login:", error);
       return { 
         success: false, 
         message: "Usuario o contraseña incorrectos" 
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     setToken(null);
     // Usamos location.href para limpiar todo el estado de la app al salir
     window.location.href = '/login';
