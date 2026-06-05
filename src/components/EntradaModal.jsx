@@ -35,10 +35,19 @@ export default function EntradaModal({ isOpen, onClose, onConfirm }) {
         try {
           const res = await api.get(`representantes/?search=${busqueda}`);
           const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
-          setResultados(data.filter(r => r.estado === 'activo'));
+          const textoBuscado = busqueda.toLowerCase();
+          
+          const filtrados = data.filter(r => {
+            const nombreValido = r.nombre.toLowerCase().includes(textoBuscado);
+            const apodoValido = r.apodo && r.apodo.toLowerCase().includes(textoBuscado);
+            
+            return r.estado === 'activo' && (nombreValido || apodoValido);
+          });
+
+          setResultados(filtrados);
           setMostrarResultados(true);
-        } catch (error) {
-          console.error(error);
+        } catch (error) { 
+          console.error(error); 
         }
       } else {
         setResultados([]);
