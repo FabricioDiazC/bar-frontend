@@ -20,7 +20,16 @@ export default function AsistenciaModal({ isOpen, onClose, onConfirm }) {
         try {
           const res = await api.get(`representantes/?search=${busqueda}`);
           const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
-          setResultados(data.filter(r => r.estado === 'activo'));
+          const textoBuscado = busqueda.toLowerCase();
+          // Para filtrar los que estan activos y que tengan las mismas letras que lo qyue vas escribiendo
+          const filtrados = data.filter(r => {
+            const nombreValido = r.nombre.toLowerCase().includes(textoBuscado);
+            const apodoValido = r.apodo && r.apodo.toLowerCase().includes(textoBuscado);
+            
+            return r.estado === 'activo' && (nombreValido || apodoValido);
+          });
+
+          setResultados(filtrados);
           setMostrarResultados(true);
         } catch (error) {
           console.error(error);
