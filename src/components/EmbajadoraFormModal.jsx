@@ -20,7 +20,7 @@ export default function EmbajadoraFormModal({ isOpen, onClose, onSuccess }) {
       await api.post('embajadores/', formData);
       toast.success("¡Embajadora creada exitosamente!");
       setFormData({ nombre: '', apodo: '', telefono: '' });
-      onSuccess(); // Actualiza el diccionario en la página principal
+      onSuccess(); // Actualiza el diccionario en la pagina principal
       onClose();
     } catch (error) {
       console.error(error.response?.data);
@@ -47,7 +47,7 @@ export default function EmbajadoraFormModal({ isOpen, onClose, onSuccess }) {
               <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2">Nombre Completo *</label>
               <div className="relative">
                 <FaStar className="absolute left-3 top-3.5 text-zinc-600" />
-                <input type="text" name="nombre" required value={formData.nombre} onChange={handleChange} placeholder="Ej: Valeria Torres"
+                <input type="text" name="nombre" required value={formData.nombre} onChange={handleChange} placeholder="Ej: Martina Alonso"
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-sm focus:border-bar-accent outline-none transition-all" />
               </div>
             </div>
@@ -58,7 +58,7 @@ export default function EmbajadoraFormModal({ isOpen, onClose, onSuccess }) {
               </label>
               <div className="relative">
                 <FaUserTag className="absolute left-3 top-3.5 text-zinc-600" />
-                <input type="text" name="apodo" value={formData.apodo} onChange={handleChange} placeholder="Ej: Vale"
+                <input type="text" name="apodo" value={formData.apodo} onChange={handleChange} placeholder="Ej: Tincha"
                   className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 pl-9 text-sm focus:border-bar-accent outline-none transition-all" />
               </div>
             </div>
