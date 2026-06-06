@@ -36,7 +36,8 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-6">
               <Link to="/reservas" className={linkStyle('/reservas')}>Reservas</Link>
               <Link to="/clientes" className={linkStyle('/clientes')}>Clientes</Link>
-              <Link to="/embajadoras" className={linkStyle('/embajadoras')}>Embajadoras</Link>
+              <Link to="/embajadoras" className={linkStyle('/embajadoras')}>Representantes</Link>
+              <Link to="/embajadoras-posta" className={linkStyle('/embajadoras-posta')}>Embajadoras</Link>
               <Link to="/entradas" className={linkStyle('/entradas')}>Entradas</Link>
             </div>
 
@@ -68,7 +69,8 @@ export default function Navbar() {
         <div className="lg:hidden flex justify-center gap-4 mt-4 pt-3 border-t border-zinc-800/50">
            <Link to="/reservas" className={linkStyle('/reservas')}>Res.</Link>
            <Link to="/clientes" className={linkStyle('/clientes')}>Cli.</Link>
-           <Link to="/embajadoras" className={linkStyle('/embajadoras')}>Emb.</Link>
+           <Link to="/embajadoras" className={linkStyle('/embajadoras')}>Repr.</Link>
+           <Link to="/embajadoras-posta" className={linkStyle('/embajadoras-posta')}>Emb.</Link>
            <Link to="/entradas" className={linkStyle('/entradas')}>Ent.</Link>
         </div>
       )}

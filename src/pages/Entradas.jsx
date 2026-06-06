@@ -108,7 +108,7 @@ export default function Entradas() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h2 className="text-3xl font-light flex items-center gap-3 italic text-bar-text">
-            <FaTicketAlt className="text-bar-accent" /> Control de Accesos
+            <FaTicketAlt className="text-bar-accent" /> Control de Entradas
           </h2>
           <p className="text-bar-muted text-xs uppercase tracking-[0.3em] mt-1">{formatearFecha(fechaFiltro)}</p>
         </div>

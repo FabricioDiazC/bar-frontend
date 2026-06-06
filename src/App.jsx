@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Clientes from './pages/Clientes';
 import Reservas from './pages/Reservas';
 import Embajadoras from './pages/Embajadoras';
+import EmbajadorasPosta from './pages/EmbajadorasPosta';
 import Entradas from './pages/Entradas';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -28,6 +29,7 @@ function App() {
                   <Route path="/reservas" element={<Reservas />} />
                   <Route path="/entradas" element={<Entradas />} />
                   <Route path="/embajadoras" element={<Embajadoras />} />
+                  <Route path="/embajadoras-posta" element={<EmbajadorasPosta />} />
                 </Route>
 
                 {/* Redirección por defecto */}
