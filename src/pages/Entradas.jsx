@@ -85,15 +85,21 @@ export default function Entradas() {
     curr.vouchers.forEach(vId => {
       const vNombre = vouchersMap[vId]?.nombre || 'Desconocido';
       // Cantidad de vouchers = cantidad de personas de esa entrada (CONSULTAR BIEN ESTO PORLAS)
-      const cant = curr.cantidad_personas || 0;
-      acc[rId].vouchersEntregados[vNombre] = (acc[rId].vouchersEntregados[vNombre] || 0) + cant;
-      acc[rId].totalRepreV += cant;
+      const cantVoucher = 1; 
+      acc[rId].vouchersEntregados[vNombre] = (acc[rId].vouchersEntregados[vNombre] || 0) + cantVoucher;
+      acc[rId].totalRepreV += cantVoucher;
     });
     return acc;
   }, {});
 
   // Obtener todos los tipos de vouchers que se usaron hoy para las columnas
-  const vouchersEnUso = [...new Set(listaEntradas.flatMap(e => e.vouchers || []).map(id => vouchersMap[id]?.nombre).filter(Boolean))];
+  const tiposDeVouchersActivos = [...new Set(listaEntradas.flatMap(e => e.vouchers || []).map(id => vouchersMap[id]?.nombre).filter(Boolean))];
+
+  // Totales Generales de Accesos
+  const totalFree = Object.values(planillaEntradas).reduce((sum, f) => sum + f.free, 0);
+  const totalCobradaCC = Object.values(planillaEntradas).reduce((sum, f) => sum + f.cobrada_cc, 0);
+  const totalCobradaSC = Object.values(planillaEntradas).reduce((sum, f) => sum + f.cobrada_sc, 0);
+  const granTotal = totalFree + totalCobradaCC + totalCobradaSC;
 
   return (
     <div className="pb-20 max-w-6xl mx-auto space-y-12 px-2 md:px-0 text-bar-text">
@@ -141,23 +147,21 @@ export default function Entradas() {
 
       {/* TABLA 2: Vouchers */}
       <section className="space-y-4 pt-4 border-t border-zinc-800">
-        <h3 className="text-sm font-bold text-bar-accent uppercase tracking-widest flex items-center gap-2">
-          <FaGift /> Planilla de Vouchers Entregados
-        </h3>
-        <div className="bg-zinc-100 rounded-2xl overflow-hidden shadow-2xl border-b-4 border-zinc-300 overflow-x-auto">
-          <div className="bg-zinc-800 text-white flex min-w-[600px] text-[10px] uppercase font-black">
+        <h3 className="text-sm font-bold text-bar-accent uppercase tracking-widest px-2 md:px-0 flex items-center gap-2"><FaGift /> Planilla de Vouchers Entregados</h3>
+        <div className="bg-zinc-100 rounded-2xl overflow-hidden shadow-2xl mx-2 md:mx-0 border-b-4 border-zinc-300 overflow-x-auto">
+          <div className="bg-zinc-800 text-white flex min-w-[600px] text-[10px] uppercase font-black tracking-tighter">
             <div className="flex-1 py-4 px-6 border-r border-zinc-700 tracking-widest">Representante</div>
-            {vouchersEnUso.map(vName => (
+            {tiposDeVouchersActivos.map(vName => (
               <div key={vName} className="w-32 py-4 text-center border-r border-zinc-700">{vName}</div>
             ))}
             <div className="w-24 py-4 text-center text-bar-accent">Total V.</div>
           </div>
-          <div className="divide-y divide-zinc-200">
+          <div className="divide-y divide-zinc-200 min-w-[600px]">
             {Object.values(planillaVouchers).length > 0 ? (
               Object.values(planillaVouchers).map((f, i) => (
                 <div key={i} className="flex bg-white text-zinc-800 text-sm font-medium min-w-[600px]">
                   <div className="flex-1 py-4 px-6 border-r border-zinc-100 italic">{f.nombre}</div>
-                  {vouchersEnUso.map(vName => (
+                  {tiposDeVouchersActivos.map(vName => (
                     <div key={vName} className="w-32 py-4 text-center border-r border-zinc-100 text-zinc-600 font-mono">
                       {f.vouchersEntregados[vName] || '-'}
                     </div>
@@ -169,11 +173,11 @@ export default function Entradas() {
               <div className="py-10 text-center text-zinc-400 bg-white italic text-xs">No se registraron vouchers para esta fecha.</div>
             )}
             
-            {/* Total final vouchers */}
+            {/* TOTAL FINAL VOUCHERS */}
             {Object.values(planillaVouchers).length > 0 && (
                <div className="bg-zinc-900 text-bar-accent flex min-w-[600px] font-black uppercase text-[10px]">
                   <div className="flex-1 py-5 px-6 text-right tracking-[0.2em] border-r border-zinc-800">Total Vouchers del día</div>
-                  {vouchersEnUso.map(vName => (
+                  {tiposDeVouchersActivos.map(vName => (
                     <div key={vName} className="w-32 py-5 text-center border-r border-zinc-800">
                       {Object.values(planillaVouchers).reduce((s,f) => s + (f.vouchersEntregados[vName] || 0), 0)}
                     </div>
