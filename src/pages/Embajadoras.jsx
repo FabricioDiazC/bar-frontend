@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTrash, FaClipboardList, FaRegClock, FaCalendarAlt } from 'react-icons/fa';
+import { FaTrash, FaClipboardList, FaRegClock, FaCalendarAlt,  FaPlus } from 'react-icons/fa';
 import AsistenciaModal from '../components/AsistenciaModal';
+import RepresentanteFormModal from '../components/RepresentanteFormModal';
 import { toast } from 'react-toastify';
 
 export default function Embajadoras() {
@@ -23,6 +24,7 @@ export default function Embajadoras() {
   const [listaAsistencia, setListaAsistencia] = useState([]);
   const [representantesMap, setRepresentantesMap] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
 
   // Cargar diccionario de nombres
   const fetchRepresentantes = async () => {
@@ -90,22 +92,28 @@ export default function Embajadoras() {
   return (
     <div className="pb-10 max-w-5xl mx-auto">
       
-      {/* HEADER */}
+      {/* HEADER ACTUALIZADO */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 px-2 md:px-0">
         <div>
           <h2 className="text-3xl font-light text-bar-text flex items-center gap-3">
-            <FaClipboardList className="text-bar-accent" /> Lista de Representantes
+            <FaClipboardList className="text-bar-accent" /> Asistencia Representantes
           </h2>
           <p className="text-bar-muted text-sm mt-1 uppercase tracking-widest">
             {fechaFiltro === getToday() ? "Planilla de Hoy" : `Planilla del ${formatearFecha(fechaFiltro)}`}
           </p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs">
-          + Agregar a la lista
-        </button>
+        
+        {/* BOTONERA */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button onClick={() => setIsCrearModalOpen(true)} className="flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-bar-text border border-zinc-700 px-5 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-[10px]">
+            <FaPlus /> Nuevo Repre
+          </button>
+          <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs">
+            Anotar Asistencia
+          </button>
+        </div>
       </div>
 
-      {/* FILTRO DE FECHA */}
       <div className="bg-bar-card p-4 rounded-xl border border-zinc-800 shadow-xl mb-8 mx-2 md:mx-0 flex items-center gap-4">
         <div className="relative w-full sm:w-64">
           <label className="text-[10px] uppercase text-zinc-500 absolute -top-2 left-2 bg-bar-card px-1">Fecha de Planilla</label>
@@ -120,16 +128,13 @@ export default function Embajadoras() {
         )}
       </div>
 
-      {/* PLANILLA VISUAL */}
       <div className="bg-zinc-100 rounded-xl overflow-hidden shadow-2xl mx-2 md:mx-0 overflow-x-auto">
         <div className="bg-zinc-800 text-white flex border-b-4 border-zinc-900 min-w-[700px]">
           <div className="w-12 py-3 text-center font-bold border-r border-zinc-700">#</div>
-          <div className="flex-1 py-3 px-6 font-bold tracking-widest text-xs border-r border-zinc-700 uppercase">Nombre y Apellido</div>
-          
+          <div className="flex-1 py-3 px-6 font-bold tracking-widest text-xs border-r border-zinc-700 uppercase">Nombre Representante</div>
           <div className="w-16 py-3 text-center font-bold tracking-widest text-[10px] border-r border-zinc-700">ACC.</div>
           <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-r border-zinc-700 uppercase">Ingreso</div>
           <div className="w-24 py-3 text-center font-bold tracking-widest text-[10px] border-l border-zinc-700 uppercase">Egreso</div>
-          
           <div className="w-12 py-3 border-l border-zinc-700"></div> 
         </div>
 
@@ -137,8 +142,6 @@ export default function Embajadoras() {
           {listaAsistencia.length > 0 ? (
             listaAsistencia.map((asistencia, index) => {
               const repreData = representantesMap[asistencia.representante] || {};
-              
-              // Buscamos el campo con cualquiera de los dos nombres posibles
               const acc = asistencia.acompañantes;
 
               return (
@@ -148,23 +151,15 @@ export default function Embajadoras() {
                     <span className="font-medium text-zinc-800 text-lg leading-tight">{repreData.nombre || '...'}</span>
                     {repreData.apodo && <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">Alias: {repreData.apodo}</span>}
                   </div>
-
-                  {/* CELDA ACOMPAÑANTES */}
                   <div className="w-16 py-4 flex justify-center items-center border-r border-zinc-200 font-bold text-zinc-700">
                     {acc ? `+${acc}` : '-'}
                   </div>
-
-                  {/* CELDA INGRESO */}
                   <div className="w-24 py-4 flex justify-center items-center border-r border-zinc-200">
                     {asistencia.hora_ingreso ? <span className="text-sm font-mono font-bold text-green-700">{asistencia.hora_ingreso.slice(0,5)}</span> : '-'}
                   </div>
-                  
-                  {/* CELDA EGRESO */}
                   <div className="w-24 py-4 flex justify-center items-center border-l border-zinc-200">
                     {asistencia.hora_egreso ? <span className="text-sm font-mono font-bold text-red-700">{asistencia.hora_egreso.slice(0,5)}</span> : '-'}
                   </div>
-                  
-                  {/* BORRAR */}
                   <div className="w-12 flex justify-center items-center border-l border-zinc-100">
                     <button onClick={() => eliminarDeLista(asistencia.id)} className="text-zinc-300 hover:text-red-500 p-2 cursor-pointer transition-colors"><FaTrash size={14} /></button>
                   </div>
@@ -173,13 +168,20 @@ export default function Embajadoras() {
             })
           ) : (
             <div className="py-20 text-center text-zinc-400 bg-white">
-              <p className="italic text-lg mb-2">La planilla del {formatearFecha(fechaFiltro)} está vacía.</p>
+              <p className="italic text-lg mb-2">La planilla está vacía.</p>
             </div>
           )}
         </div>
       </div>
 
       <AsistenciaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmar} />
+      
+      {/* NUEVO MODAL DE CREACIÓN DE REPRESENTANTE */}
+      <RepresentanteFormModal 
+        isOpen={isCrearModalOpen} 
+        onClose={() => setIsCrearModalOpen(false)} 
+        onSuccess={fetchRepresentantes} // Refresca el diccionario de inmediato
+      />
     </div>
   );
 }
