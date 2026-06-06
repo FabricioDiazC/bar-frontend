@@ -111,7 +111,7 @@ export default function EntradaModal({ isOpen, onClose, onConfirm }) {
             {/* Buscador Representante */}
             <div className="relative">
               <label className="block text-[10px] uppercase tracking-widest text-bar-muted mb-2 flex justify-between">
-                <span>Representante / Embajadora *</span>
+                <span>Representante*</span>
                 {repreSeleccionado && <span className="text-green-500 flex items-center gap-1"><FaCheckCircle size={10}/> Seleccionado</span>}
               </label>
               <div className="relative group">
