@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTrash, FaClipboardList, FaRegClock, FaCalendarAlt } from 'react-icons/fa';
+import { FaTrash, FaClipboardList, FaRegClock, FaCalendarAlt, FaPlus } from 'react-icons/fa';
 import AsistenciaEmbajadoraModal from '../components/AsistenciaEmbajadoraModal';
+import EmbajadoraFormModal from '../components/EmbajadoraFormModal';
 import { toast } from 'react-toastify';
 
 export default function EmbajadorasPosta() {
@@ -22,6 +23,7 @@ export default function EmbajadorasPosta() {
   // Guardará el mapeo de ID a Objeto Embajador
   const [embajadoresMap, setEmbajadoresMap] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCrearModalOpen, setIsCrearModalOpen] = useState(false); 
 
   const fetchEmbajadores = async () => {
     try {
@@ -83,18 +85,26 @@ export default function EmbajadorasPosta() {
 
   return (
     <div className="pb-10 max-w-5xl mx-auto">
+      {/* HEADER  */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 px-2 md:px-0">
         <div>
           <h2 className="text-3xl font-light text-bar-text flex items-center gap-3">
-            <FaClipboardList className="text-bar-accent" /> Embajadoras
+            <FaClipboardList className="text-bar-accent" /> Control Puerta (Embajadoras)
           </h2>
           <p className="text-bar-muted text-sm mt-1 uppercase tracking-widest">
             {fechaFiltro === getToday() ? "Planilla de Hoy" : `Planilla del ${formatearFecha(fechaFiltro)}`}
           </p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs">
-          + Agregar a la lista
-        </button>
+
+        {/* BOTON */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button onClick={() => setIsCrearModalOpen(true)} className="flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-bar-text border border-zinc-700 px-5 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-[10px]">
+            <FaPlus /> Nueva Embajadora
+          </button>
+          <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full sm:w-auto cursor-pointer uppercase tracking-widest text-xs">
+            Anotar Asistencia
+          </button>
+        </div>
       </div>
 
       <div className="bg-bar-card p-4 rounded-xl border border-zinc-800 shadow-xl mb-8 mx-2 md:mx-0 flex items-center gap-4">
@@ -124,7 +134,7 @@ export default function EmbajadorasPosta() {
         <div className="divide-y border-zinc-300 min-w-[700px]">
           {listaAsistencia.length > 0 ? (
             listaAsistencia.map((asistencia, index) => {
-              // BUSCAMOS EN EL MAPA DE EMBAJADORES
+              // Busqueda en embajadores
               const embData = embajadoresMap[asistencia.embajador] || {};
               const acc = asistencia.acompañantes;
 
@@ -159,6 +169,12 @@ export default function EmbajadorasPosta() {
       </div>
 
       <AsistenciaEmbajadoraModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmar} />
+
+    {/* MODAL DE CREACION DE EMBAJADORA */}
+      <EmbajadoraFormModal 
+        isOpen={isCrearModalOpen} 
+        onClose={() => setIsCrearModalOpen(false)} 
+        onSuccess={fetchEmbajadores} />
     </div>
   );
 }
