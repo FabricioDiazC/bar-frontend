@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FaTicketAlt, FaCalendarAlt, FaGift } from 'react-icons/fa';
+import { FaTicketAlt, FaCalendarAlt, FaGift, FaEdit, FaTrash } from 'react-icons/fa';
 import EntradaModal from '../components/EntradaModal';
+import GestionarEntradasModal from '../components/GestionarEntradasModal';
 import { toast } from 'react-toastify';
 
 export default function Entradas() {
@@ -24,6 +25,9 @@ export default function Entradas() {
   const [representantesMap, setRepresentantesMap] = useState({});
   const [vouchersMap, setVouchersMap] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  //Estados para el modal de gestion
+  const [isGestionModalOpen, setIsGestionModalOpen] = useState(false);
+  const [repreGestion, setRepreGestion] = useState({ id: null, nombre: '' });
 
   // Cargar Catálogos (Repres y Vouchers)
   useEffect(() => {
@@ -57,6 +61,24 @@ export default function Entradas() {
       toast.success('Carga exitosa');
       fetchEntradas();
     } catch (e) { toast.error('Error al guardar'); }
+  };
+
+
+  // Funcion para vaciar planilla
+  const vaciarPlanilla = async () => {
+    if (listaEntradas.length === 0) return toast.info("La planilla ya está vacía.");
+    
+    if (window.confirm(`ATENCIÓN: ¿Estás seguro de que deseas ELIMINAR TODAS las entradas cargadas el ${formatearFecha(fechaFiltro)}? Esta acción es irreversible.`)) {
+      try {
+        // para borrar todas las entradas de esa fecha una por una mediante Promise.all
+        await Promise.all(listaEntradas.map(entrada => api.delete(`entradas/${entrada.id}/`)));
+        toast.success("Planilla vaciada correctamente.");
+        fetchEntradas(); // Se recarga para que quede en 0
+      } catch (error) {
+        toast.error("Hubo un error al vaciar la planilla.");
+        fetchEntradas(); // Se recarga para ver cuáles se llegaron a borrar
+      }
+    }
   };
 
   // --- Agrupacion para tabla 1: Entradas ---
@@ -96,6 +118,7 @@ export default function Entradas() {
   const tiposDeVouchersActivos = [...new Set(listaEntradas.flatMap(e => e.vouchers || []).map(id => vouchersMap[id]?.nombre).filter(Boolean))];
 
   // Totales Generales de Accesos
+  const filasPlanilla = Object.values(planillaEntradas).sort((a, b) => b.total - a.total);
   const totalFree = Object.values(planillaEntradas).reduce((sum, f) => sum + f.free, 0);
   const totalCobradaCC = Object.values(planillaEntradas).reduce((sum, f) => sum + f.cobrada_cc, 0);
   const totalCobradaSC = Object.values(planillaEntradas).reduce((sum, f) => sum + f.cobrada_sc, 0);
@@ -108,15 +131,21 @@ export default function Entradas() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h2 className="text-3xl font-light flex items-center gap-3 italic text-bar-text">
-            <FaTicketAlt className="text-bar-accent" /> Control de Entradas
+            <FaTicketAlt className="text-bar-accent" /> Entradas y Vouchers
           </h2>
           <p className="text-bar-muted text-xs uppercase tracking-[0.3em] mt-1">{formatearFecha(fechaFiltro)}</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-8 py-3 rounded-xl font-bold shadow-lg w-full sm:w-auto transition-all cursor-pointer uppercase text-xs">
-          + Cargar Entradas
-        </button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          {/* BOTÓN VACIAR PLANILLA */}
+          <button onClick={vaciarPlanilla} className="flex items-center justify-center gap-2 bg-zinc-900 border border-red-900/50 hover:bg-red-900/20 text-red-500 px-6 py-3 rounded-xl font-bold shadow-lg w-full sm:w-auto transition-all active:scale-95 uppercase text-[10px] tracking-widest cursor-pointer">
+            <FaTrash /> Vaciar Planilla
+          </button>
+          
+          <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-yellow-600 text-black px-8 py-3 rounded-xl font-bold shadow-lg w-full sm:w-auto transition-all active:scale-95 uppercase text-[10px] tracking-widest cursor-pointer">
+            + Cargar Entradas
+          </button>
+        </div>
       </div>
-
       {/* Filtro */}
       <div className="bg-bar-card p-4 rounded-2xl border border-zinc-800 flex items-center gap-4 shadow-xl">
         <FaCalendarAlt className="text-zinc-600 ml-2" />
@@ -124,26 +153,47 @@ export default function Entradas() {
       </div>
 
       {/* TABLA 1: Entradas */}
-      <div className="bg-zinc-100 rounded-2xl overflow-hidden shadow-2xl border-b-4 border-zinc-300">
-        <div className="bg-zinc-800 text-white flex min-w-[600px] text-[10px] uppercase font-black">
-          <div className="flex-1 py-4 px-6 border-r border-zinc-700 tracking-widest">Representante</div>
-          <div className="w-24 py-4 text-center border-r border-zinc-700">Free</div>
-          <div className="w-24 py-4 text-center border-r border-zinc-700">C/ Cons.</div>
-          <div className="w-24 py-4 text-center border-r border-zinc-700">S/ Cons.</div>
-          <div className="w-24 py-4 text-center text-bar-accent">Total</div>
+      <section className="space-y-4">
+        <h3 className="text-sm font-bold text-bar-accent uppercase tracking-widest px-2 md:px-0 flex items-center gap-2"><FaTicketAlt /> Control de Accesos</h3>
+        <div className="bg-zinc-100 rounded-2xl overflow-hidden shadow-2xl border-b-4 border-zinc-300 overflow-x-auto">
+          <div className="bg-zinc-800 text-white flex min-w-[700px] text-[10px] uppercase font-black tracking-tighter">
+            <div className="flex-1 py-4 px-6 border-r border-zinc-700 tracking-widest">Representante</div>
+            <div className="w-24 py-4 text-center border-r border-zinc-700">Free</div>
+            <div className="w-24 py-4 text-center border-r border-zinc-700">C/ Cons.</div>
+            <div className="w-24 py-4 text-center border-r border-zinc-700">S/ Cons.</div>
+            <div className="w-24 py-4 text-center border-r border-zinc-700 text-bar-accent">Total</div>
+            <div className="w-20 py-4 text-center text-zinc-500">Acciones</div> {/* NUEVA COLUMNA */}
+          </div>
+          <div className="divide-y divide-zinc-200 min-w-[700px]">
+            {filasPlanilla.length > 0 ? (
+              filasPlanilla.map((f, i) => (
+                <div key={i} className="flex bg-white text-zinc-800 text-sm font-medium italic items-center">
+                  <div className="flex-1 py-4 px-6 border-r border-zinc-100">{f.nombre}</div>
+                  <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.free || '-'}</div>
+                  <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.cobrada_cc || '-'}</div>
+                  <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.cobrada_sc || '-'}</div>
+                  <div className="w-24 py-4 text-center font-black bg-zinc-50 border-r border-zinc-100">{f.total}</div>
+                  <div className="w-20 py-2 flex justify-center items-center">
+                    {/* BOTÓN EDITAR */}
+                    <button 
+                      onClick={() => {
+                        setRepreGestion({ id: f.id, nombre: f.nombre });
+                        setIsGestionModalOpen(true);
+                      }}
+                      className="text-zinc-400 hover:text-bar-accent hover:bg-yellow-50 p-3 rounded-full transition-colors cursor-pointer"
+                      title="Editar cargas de este representante"
+                    >
+                      <FaEdit size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center text-zinc-400 bg-white">Planilla vacía.</div>
+            )}
+          </div>
         </div>
-        <div className="divide-y divide-zinc-200">
-          {Object.values(planillaEntradas).map((f, i) => (
-            <div key={i} className="flex bg-white text-zinc-800 text-sm font-medium italic min-w-[600px]">
-              <div className="flex-1 py-4 px-6 border-r border-zinc-100">{f.nombre}</div>
-              <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.free || '-'}</div>
-              <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.cobrada_cc || '-'}</div>
-              <div className="w-24 py-4 text-center border-r border-zinc-100 text-zinc-500">{f.cobrada_sc || '-'}</div>
-              <div className="w-24 py-4 text-center font-black bg-zinc-50">{f.total}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {/* TABLA 2: Vouchers */}
       <section className="space-y-4 pt-4 border-t border-zinc-800">
@@ -192,6 +242,15 @@ export default function Entradas() {
       </section>
 
       <EntradaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleConfirmar} />
+
+        {/* Modal de gestion */}
+      <GestionarEntradasModal 
+        isOpen={isGestionModalOpen} 
+        onClose={() => setIsGestionModalOpen(false)}
+        repreNombre={repreGestion.nombre}
+        entradasDelRepre={listaEntradas.filter(e => e.representante === repreGestion.id)}
+        onActualizar={fetchEntradas}
+      />
     </div>
   );
 }
