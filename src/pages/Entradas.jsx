@@ -84,9 +84,7 @@ export default function Entradas() {
   // --- Agrupacion para tabla 1: Entradas ---
   const planillaEntradas = listaEntradas.reduce((acc, curr) => {
     const rId = curr.representante;
-    if (!acc[rId]) {
-      acc[rId] = { nombre: representantesMap[rId]?.nombre || '...', free: 0, cobrada_cc: 0, cobrada_sc: 0, total: 0 };
-    }
+    if (!acc[rId]) acc[rId] = { id: curr.representante, nombre: representantesMap[rId]?.nombre || '...', free: 0, cobrada_cc: 0, cobrada_sc: 0, total: 0 };
     const cant = curr.cantidad_personas || 0;
     if (curr.tipo === 'free') acc[rId].free += cant;
     if (curr.tipo === 'cobrada_con_consumible') acc[rId].cobrada_cc += cant;
@@ -248,7 +246,7 @@ export default function Entradas() {
         isOpen={isGestionModalOpen} 
         onClose={() => setIsGestionModalOpen(false)}
         repreNombre={repreGestion.nombre}
-        entradasDelRepre={listaEntradas.filter(e => e.representante === repreGestion.id)}
+        entradasDelRepre={listaEntradas.filter(e => Number(e.representante) === Number(repreGestion.id))}
         onActualizar={fetchEntradas}
       />
     </div>
