@@ -5,7 +5,7 @@ import ReservaCard from '../components/ReservaCard';
 import ReservaFormModal from '../components/ReservaFormModal';
 import ReservaEditModal from '../components/ReservaEditModal';
 import BotonLimpiarFiltros from '../components/BotonLimpiarFiltros';
-import { FaSearch, FaCalendarAlt, FaArrowRight, FaFilter, FaUserTie, FaClock} from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaArrowRight, FaFilter, FaUserTie, FaClock, FaUsers} from 'react-icons/fa';
 import { confirmDelete, toastAlert } from '../utils/alerts';
 import { toast } from 'react-toastify';
 import Paginacion from '../components/Paginacion';
@@ -44,11 +44,11 @@ export default function Reservas() {
   //PaGINADO
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
-  //Estado para el contador
+  //Estado para el contador de personas que van a venir hoy
   const [contadorHoy, setContadorHoy] = useState(0);
   
 
-//Funcion para calcular las reservas esperadas para hoy
+//Funcion para calcular las personas esperadas para hoy
 const actualizarContadorHoy = async () => {
     try {
       const hoy = getToday();
@@ -56,7 +56,7 @@ const actualizarContadorHoy = async () => {
       let todasLasReservas = [];
       let hayMas = true;
 
-      // bucle por si hay muchas reservas y el backend las pagina
+      // Bucle por si hay muchas reservas y el backend las pagina
       while (hayMas) {
         const res = await api.get(`reservas/?fecha_desde=${hoy}&fecha_hasta=${hoy}&page=${paginaActual}`);
         const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
@@ -69,19 +69,22 @@ const actualizarContadorHoy = async () => {
         }
       }
 
-      // Filtracion de reservas
-      const esperadas = todasLasReservas.filter(r => {
-        if (!r.hora_inicio) return false;
-        const hora = r.hora_inicio.slice(0, 5); // Cortamos a HH:MM
+      // Se suman la cantidad de personas
+      const totalPersonas = todasLasReservas.reduce((suma, r) => {
+        if (!r.hora_inicio) return suma;
         
-        // No cuento las canceladas (tener en cuenta esto)
+        const hora = r.hora_inicio.slice(0, 5); 
         const activa = r.estado !== 'cancelado'; 
         
+        // Si cumple el horario y no está cancelada, sumamos las personas
+        if (hora >= "18:00" && hora <= "22:30" && activa) {
+          return suma + (parseInt(r.cantidad_personas) || 0);
+        }
         
-        return hora >= "18:00" && hora <= "22:30" && activa;
-      });
+        return suma; // Si no cumple, no sumamos nada
+      }, 0);
 
-      setContadorHoy(esperadas.length);
+      setContadorHoy(totalPersonas);
     } catch (error) {
       console.error("Error al cargar el contador de hoy:", error);
     }
@@ -141,7 +144,7 @@ const actualizarContadorHoy = async () => {
         fetchReservas();
         
         toast.success('Reserva eliminada con éxito');
-        actualizarContadorHoy(); // Se actuializa el contador por si se borra una reserva de hoy
+        recargarTodo(); // Se actuializa el contador por si se borra una reserva de hoy
         
       } catch (error) {
         console.error("Error al eliminar", error);
@@ -172,13 +175,13 @@ const actualizarContadorHoy = async () => {
               : `Periodo: ${formatearFecha(fechaDesde)} al ${formatearFecha(fechaHasta)}`}
           </p>
         </div>
-        {/* NUEVO: CONTADOR DE RESERVAS DE HOY */}
-        <div className="bg-zinc-900 border border-zinc-700 px-5 py-2 rounded-xl shadow-lg flex flex-col justify-center items-center flex-1 md:flex-none">
-            <span className="text-[9px] uppercase tracking-widest text-zinc-500 flex items-center gap-1 mb-0.5">
+        {/*Contador de personas que van a venir hoy*/}
+        <div className="bg-zinc-900 border border-zinc-700 px-5 py-2 rounded-xl shadow-lg flex flex-col justify-center items-center flex-1 sm:flex-none">
+            <span className="text-[9px] uppercase tracking-widest text-zinc-500 flex items-center gap-1 mb-0.5 whitespace-nowrap">
               <FaClock size={8} /> Hoy (18:00 - 22:30)
             </span>
-            <span className="text-xl font-black text-bar-accent leading-none">
-              {contadorHoy} <span className="text-[10px] font-light text-zinc-400 uppercase tracking-widest">Esperadas</span>
+            <span className="text-xl font-black text-bar-accent leading-none flex items-center gap-2">
+              {contadorHoy} <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1 mt-1"><FaUsers size={10}/> Personas</span>
             </span>
           </div>
         <button 
