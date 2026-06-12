@@ -24,7 +24,9 @@ export default function ReservaEditModal({ isOpen, onClose, onSuccess, reserva }
     { id: 'free_con_representante', label: 'Free con Representante' },
     { id: 'free_sin_representante', label: 'Free sin representante' },
     { id: 'cobrada_con_consumible', label: 'Cobrada con consumible' },
-    { id: 'cobrada_sin_consumible', label: 'Cobrada sin consumible' }
+    { id: 'cobrada_sin_consumible', label: 'Cobrada sin consumible' },
+    { id: 'a_bailar', label: 'A bailar' },
+    { id: 'a_cenar', label: 'A cenar' }
   ];
 
   // Definimos el valor por defecto del backend como una constante
