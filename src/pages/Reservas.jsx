@@ -5,7 +5,7 @@ import ReservaCard from '../components/ReservaCard';
 import ReservaFormModal from '../components/ReservaFormModal';
 import ReservaEditModal from '../components/ReservaEditModal';
 import BotonLimpiarFiltros from '../components/BotonLimpiarFiltros';
-import { FaSearch, FaCalendarAlt, FaArrowRight, FaFilter, FaUserTie} from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaArrowRight, FaFilter, FaUserTie, FaClock} from 'react-icons/fa';
 import { confirmDelete, toastAlert } from '../utils/alerts';
 import { toast } from 'react-toastify';
 import Paginacion from '../components/Paginacion';
@@ -44,7 +44,54 @@ export default function Reservas() {
   //PaGINADO
   const [pagina, setPagina] = useState(1);
   const [total, setTotal] = useState(0);
+  //Estado para el contador
+  const [contadorHoy, setContadorHoy] = useState(0);
   
+
+//Funcion para calcular las reservas esperadas para hoy
+const actualizarContadorHoy = async () => {
+    try {
+      const hoy = getToday();
+      let paginaActual = 1;
+      let todasLasReservas = [];
+      let hayMas = true;
+
+      // bucle por si hay muchas reservas y el backend las pagina
+      while (hayMas) {
+        const res = await api.get(`reservas/?fecha_desde=${hoy}&fecha_hasta=${hoy}&page=${paginaActual}`);
+        const data = res.data.results || (Array.isArray(res.data) ? res.data : []);
+        todasLasReservas = [...todasLasReservas, ...data];
+        
+        if (res.data.next) {
+          paginaActual++;
+        } else {
+          hayMas = false;
+        }
+      }
+
+      // Filtracion de reservas
+      const esperadas = todasLasReservas.filter(r => {
+        if (!r.hora_inicio) return false;
+        const hora = r.hora_inicio.slice(0, 5); // Cortamos a HH:MM
+        
+        // No cuento las canceladas (tener en cuenta esto)
+        const activa = r.estado !== 'cancelado'; 
+        
+        
+        return hora >= "18:00" && hora <= "22:30" && activa;
+      });
+
+      setContadorHoy(esperadas.length);
+    } catch (error) {
+      console.error("Error al cargar el contador de hoy:", error);
+    }
+  };
+
+  // Cargar el contador al entrar a la pagina
+  useEffect(() => {
+    actualizarContadorHoy();
+  }, []);
+
 
   const fetchReservas = async () => {
     try {
@@ -94,6 +141,7 @@ export default function Reservas() {
         fetchReservas();
         
         toast.success('Reserva eliminada con éxito');
+        actualizarContadorHoy(); // Se actuializa el contador por si se borra una reserva de hoy
         
       } catch (error) {
         console.error("Error al eliminar", error);
@@ -107,6 +155,12 @@ export default function Reservas() {
     setIsEditModalOpen(true);
   };
 
+  // Función que llamamos cuando se crea o edita una reserva con éxito
+  const recargarTodo = () => {
+    fetchReservas();
+    actualizarContadorHoy();
+  };
+
   return (
     <div className="pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4 px-2 md:px-0">
@@ -118,6 +172,15 @@ export default function Reservas() {
               : `Periodo: ${formatearFecha(fechaDesde)} al ${formatearFecha(fechaHasta)}`}
           </p>
         </div>
+        {/* NUEVO: CONTADOR DE RESERVAS DE HOY */}
+        <div className="bg-zinc-900 border border-zinc-700 px-5 py-2 rounded-xl shadow-lg flex flex-col justify-center items-center flex-1 md:flex-none">
+            <span className="text-[9px] uppercase tracking-widest text-zinc-500 flex items-center gap-1 mb-0.5">
+              <FaClock size={8} /> Hoy (18:00 - 22:30)
+            </span>
+            <span className="text-xl font-black text-bar-accent leading-none">
+              {contadorHoy} <span className="text-[10px] font-light text-zinc-400 uppercase tracking-widest">Esperadas</span>
+            </span>
+          </div>
         <button 
           onClick={() => setIsModalOpen(true)} 
           className="bg-bar-accent hover:bg-yellow-600 text-black px-6 py-3 rounded-xl font-bold transition shadow-lg w-full md:w-auto cursor-pointer"
@@ -208,12 +271,12 @@ export default function Reservas() {
 
       <Paginacion paginaActual={pagina} total={total} limite={20} onPageChange={setPagina} />
 
-      <ReservaFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchReservas} />
+      <ReservaFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={recargarTodo} />
       
       <ReservaEditModal 
         isOpen={isEditModalOpen} 
         onClose={() => { setIsEditModalOpen(false); setReservaToEdit(null); }} 
-        onSuccess={fetchReservas} 
+        onSuccess={recargarTodo} 
         reserva={reservaToEdit} 
       />
     </div>
