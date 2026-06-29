@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Importamos el hook de autenticación
+import { useAuth } from '../context/AuthContext';
 import { FaSignOutAlt, FaUserCircle } from 'react-icons/fa';
 import logoImg from '../assets/logo.png';
 
@@ -32,13 +32,14 @@ export default function Navbar() {
         {isAuthenticated ? (
           <div className="flex items-center gap-4 md:gap-8">
             
-            {/* Enlaces de escritorio (Se ocultan en móviles muy pequeños si quieres) */}
+            {/* Enlaces de escritorio */}
             <div className="hidden lg:flex items-center gap-6">
               <Link to="/reservas" className={linkStyle('/reservas')}>Reservas</Link>
               <Link to="/clientes" className={linkStyle('/clientes')}>Clientes</Link>
               <Link to="/embajadoras" className={linkStyle('/embajadoras')}>Representantes</Link>
               <Link to="/embajadoras-posta" className={linkStyle('/embajadoras-posta')}>Embajadoras</Link>
               <Link to="/entradas" className={linkStyle('/entradas')}>Entradas</Link>
+              <Link to="/resumen" className={linkStyle('/resumen')}>Resumen</Link>
             </div>
 
             {/* Separador visual */}
@@ -64,7 +65,7 @@ export default function Navbar() {
 
       </div>
 
-      {/* MENÚ MÓVIL (Opcional: Links debajo en pantallas pequeñas) */}
+      {/* MENÚ MOVIL  */}
       {isAuthenticated && (
         <div className="lg:hidden flex justify-center gap-4 mt-4 pt-3 border-t border-zinc-800/50">
            <Link to="/reservas" className={linkStyle('/reservas')}>Res.</Link>
@@ -72,6 +73,7 @@ export default function Navbar() {
            <Link to="/embajadoras" className={linkStyle('/embajadoras')}>Repr.</Link>
            <Link to="/embajadoras-posta" className={linkStyle('/embajadoras-posta')}>Emb.</Link>
            <Link to="/entradas" className={linkStyle('/entradas')}>Ent.</Link>
+           <Link to="/resumen" className={linkStyle('/resumen')}>Resum.</Link>
         </div>
       )}
     </nav>
