@@ -8,6 +8,7 @@ import Reservas from './pages/Reservas';
 import Embajadoras from './pages/Embajadoras';
 import EmbajadorasPosta from './pages/EmbajadorasPosta';
 import Entradas from './pages/Entradas';
+import Resumen from './pages/Resumen';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -30,6 +31,7 @@ function App() {
                   <Route path="/entradas" element={<Entradas />} />
                   <Route path="/embajadoras" element={<Embajadoras />} />
                   <Route path="/embajadoras-posta" element={<EmbajadorasPosta />} />
+                  <Route path="/resumen" element={<Resumen />} />
                 </Route>
 
                 {/* Redirección por defecto */}
