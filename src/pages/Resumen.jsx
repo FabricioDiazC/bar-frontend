@@ -122,7 +122,7 @@ export default function Resumen() {
             <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
               <FaUsers className="text-blue-500/70 mb-2" size={24} />
               <span className="text-3xl font-black text-blue-400">{reporte.resumen.esperados}</span>
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Comensales Esperados</span>
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Personas Esperadas</span>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
